@@ -3,7 +3,9 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema(
   {
     name: {
-        type: String, required: true, trim: true
+        type: String,
+        required: true,
+        trim: true
     },
     username: {
         type: String,
@@ -16,7 +18,11 @@ const userSchema = new mongoose.Schema(
         type: String,
         required: true
      },
-    token: { type: String, default: null, index: true }, //session token
+    token: { //session token
+        type: String,
+        default: null,
+        index: true // It makes reads faster ( User.findOne({token})) but makes writes lil slower and use extra storage
+    }, 
   },
   { timestamps: true },
 );
