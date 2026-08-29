@@ -2,6 +2,7 @@ import express from 'express';
 import http from 'http';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import routes from './routes/index.routes.js'
 import mongoose from 'mongoose';
 import { initSocket } from './controllers/socketManager.js';
 
@@ -12,6 +13,8 @@ dotenv.config();
 app.use(cors());
 app.use(express.json());
 initSocket(server);
+
+app.use('/api',routes)
 
 app.get('/', (req, res) => {
     res.send("Hello World");
