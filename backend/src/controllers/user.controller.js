@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import User from '../models/user.model.js';
 import crypto from 'node:crypto';
+import Meeting from '../models/meeting.model.js';
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
 
@@ -75,4 +76,24 @@ export const loginUser = async (req, res) => {
     console.error('login failed:', err.message);
     return res.status(500).json({ message: 'Login failed' });
   }
+};
+
+export const getUserHistory = async (req, res) => {
+  
+  const items = await Meeting.find({ user_id: req.user.username }).sort({ date: -1 }).limit(50).lean();
+  return res.json({ items, count: items.length });
+};
+
+export const addMeetingToHistory = async (req, res) => {
+  const { meetingCode } = req.body || {};
+  
+  if (!meetingCode || !/^[a-z0-9]{4,12}$/i.test(String(meetingCode))) {
+    return res.status(400).json({ message: 'Invalid meeting code' });
+  }
+  const meeting = await Meeting.create({
+    user_id: req.user.username,
+    meetingCode: String(meetingCode).toLowerCase(),
+    meetingOwner: req.user.username,
+  });
+  return res.status(201).json(meeting);
 };
