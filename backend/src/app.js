@@ -1,18 +1,35 @@
 import express from 'express';
-import http from 'http';
+import http from 'node:http';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import routes from './routes/index.routes.js'
+import { config } from './config.js';
+import routes from './routes/index.routes.js';
 import mongoose from 'mongoose';
-import { initSocket } from './controllers/socketManager.js';
+// import { initSocket } from './controllers/socketManager.js';
+import { Server } from 'socket.io';
+import { registerSocketHandlers } from './controllers/socket/index.js';
+
 
 const app = express();
-const server = http.createServer(app);
+const httpServer = http.createServer(app);
 
 dotenv.config();
-app.use(cors());
+const corsOrigin = (origin, callback) => {
+  if (!origin || config.allowedOrigins.includes(origin)) {
+    return callback(null, true);
+  }
+  return callback(new Error('Not allowed by CORS'));
+};
+
+app.use(cors({ origin:corsOrigin }));
 app.use(express.json());
-initSocket(server);
+// initSocket(server);
+
+const io = new Server(httpServer, {
+  cors: { origin: corsOrigin },
+  transports: ['websocket', 'polling'],
+});
+registerSocketHandlers(io);
 
 app.use('/api',routes)
 
@@ -31,6 +48,6 @@ try{
 }
 
 
-server.listen(process.env.PORT, () => {
+httpServer.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
 });
