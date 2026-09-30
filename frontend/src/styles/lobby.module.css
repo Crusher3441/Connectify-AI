@@ -1,0 +1,80 @@
+.lobby {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  padding: 28px;
+}
+
+.code {
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.preview {
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholder {
+  color: var(--color-text-muted);
+}
+
+.error {
+  color: var(--color-danger);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.input {
+  background: var(--color-bg);
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  padding: 12px 16px;
+  font-size: 1rem;
+  outline: none;
+}
+.input:focus {
+  border-color: var(--color-primary);
+}
+
+.joinBtn {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 13px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.joinBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.joinBtn:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
