@@ -1,6 +1,6 @@
 import User from '../models/user.model.js';
 
-// THE single token gate (audit #4 + #10 together). Every protected route
+// THE single token gate. Every protected route
 // mounts this; identity flows to handlers via req.user — never from
 // req.body, req.query, or req.params, no matter what the client sends.
 export const requireAuth = async (req, res, next) => {
@@ -11,7 +11,7 @@ export const requireAuth = async (req, res, next) => {
     return res.status(401).json({ message: 'Authorization required' });
   }
 
-  const user = await User.findOne({ token }).select('-password'); // search user by token in db, return everything except password
+  const user = await User.findOne({ token }).select('-password'); // search user by token in db ( to search do i have already registered user with this token? ), return everything except password
   if (!user) {
     return res.status(401).json({ message: 'Invalid or expired token' });
   }

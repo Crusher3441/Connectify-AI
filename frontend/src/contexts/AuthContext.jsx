@@ -22,8 +22,6 @@ export function AuthProvider({ children }) {
     setUser(newUser);
   };
 
-  // written as code: NO credential is ever logged. The old project's
-  // console.log(username, password) is the exact line this comment replaces.
   const register = useCallback(async ({ name, username, password }) => {
     const res = await apiClient.post('/users/register', { name, username, password });
     return res.data; // 201, no token — the user logs in explicitly (2I wires that step)
