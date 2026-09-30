@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext.jsx';
 import  AuthenticationPage  from './pages/authentication.jsx';
 import HomePage from './pages/home.jsx';
 import { withAuth } from './utils/withAuth.jsx';
+import VideoMeet from './pages/VideoMeet.jsx';
 
 const ProtectedHome = withAuth(HomePage);
 
@@ -15,6 +16,7 @@ function app(){
         <Route path="/" element={<Landing />} />
         <Route path='/auth' element={<AuthenticationPage/>}/>
         <Route path='/home' element={<ProtectedHome/>}/>
+        <Route path="/meeting/:code" element={<VideoMeet />} />
       </Routes>
     </BrowserRouter>
     </AuthProvider>

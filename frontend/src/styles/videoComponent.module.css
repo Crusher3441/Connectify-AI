@@ -33,3 +33,37 @@
   color: #fff;
   font-size: 0.85rem;
 }
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--color-surface);
+}
+
+.ctrlBtn {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius-md);
+  padding: 11px 20px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.ctrlBtn:hover {
+  border-color: var(--color-primary);
+}
+
+.leaveBtn {
+  background: var(--color-danger);
+  color: #fff;
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.meetingRoot {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
