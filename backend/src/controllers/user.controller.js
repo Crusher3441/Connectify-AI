@@ -86,14 +86,10 @@ export const getUserHistory = async (req, res) => {
 
 export const addMeetingToHistory = async (req, res) => {
   const { meetingCode } = req.body || {};
-  
-  if (!meetingCode || !/^[a-z0-9]{4,12}$/i.test(String(meetingCode))) {
-    return res.status(400).json({ message: 'Invalid meeting code' });
+  try {
+    const meeting = await recordMeeting({ meetingCode, username: req.user.username });
+    return res.status(201).json(meeting);
+  } catch (err) {
+    return res.status(err.status || 400).json({ message: err.message });
   }
-  const meeting = await Meeting.create({
-    user_id: req.user.username,
-    meetingCode: String(meetingCode).toLowerCase(),
-    meetingOwner: req.user.username,
-  });
-  return res.status(201).json(meeting);
 };

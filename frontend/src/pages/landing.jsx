@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { BACKEND_URL } from '../environment';
 import styles from '../styles/landing.module.css';
+import { useNavigate } from "react-router-dom";
 
 export default function LandingPage() {
+  const navigate = useNavigate();
   // 'checking' → 'up' | 'down': this card is the phase's end-to-end proof.
   // React (:3000) fetches Express (:8000) through CORS and shows the result.
   const [backendStatus, setBackendStatus] = useState('checking');
@@ -31,8 +33,8 @@ export default function LandingPage() {
         </p>
 
         <div className={styles.actions}>
-          {/* Navigation targets arrive in Phase 2 — buttons are placeholders */}
-          <button className={styles.primaryBtn}>Get Started</button>
+          
+          <button className={styles.primaryBtn} onClick={() => navigate("/auth")}>Get Started</button>
           <button className={styles.ghostBtn}>I have a meeting code</button>
         </div>
 

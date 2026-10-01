@@ -67,3 +67,16 @@
   flex-direction: column;
   height: 100vh;
 }
+
+.body {
+  flex: 1;
+  display: flex;
+  min-height: 0;      /* lets the sidebar scroll independently */
+}
+
+.stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;       /* lets the grid shrink instead of overflowing */
+}
