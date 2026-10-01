@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import User from '../models/user.model.js';
 import crypto from 'node:crypto';
 import Meeting from '../models/meeting.model.js';
+import { recordMeeting } from './meeting.controller.js';
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
 

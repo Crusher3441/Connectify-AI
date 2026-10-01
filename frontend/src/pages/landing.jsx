@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { BACKEND_URL } from '../environment';
 import styles from '../styles/landing.module.css';
 import { useNavigate } from "react-router-dom";
+import { useAuth } from '../contexts/AuthContext';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { user } = useAuth(); 
   // 'checking' → 'up' | 'down': this card is the phase's end-to-end proof.
   // React (:3000) fetches Express (:8000) through CORS and shows the result.
   const [backendStatus, setBackendStatus] = useState('checking');
@@ -15,6 +17,7 @@ export default function LandingPage() {
       .catch(() => setBackendStatus('down'));
   }, []);
 
+  const goToApp = () => navigate(user ? '/home' : '/auth');
   return (
     <main className={styles.hero}>
       <header className={styles.navbar}>
@@ -34,8 +37,8 @@ export default function LandingPage() {
 
         <div className={styles.actions}>
           
-          <button className={styles.primaryBtn} onClick={() => navigate("/auth")}>Get Started</button>
-          <button className={styles.ghostBtn}>I have a meeting code</button>
+          <button className={styles.primaryBtn} onClick={goToApp}>Get Started</button>
+          <button className={styles.ghostBtn} onClick={goToApp}>I have a meeting code</button>
         </div>
 
         <div className={`${styles.statusCard} ${styles[backendStatus]}`}>

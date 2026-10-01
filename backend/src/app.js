@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
 // import { initSocket } from './controllers/socketManager.js';
 import { Server } from 'socket.io';
 import { registerSocketHandlers } from './controllers/socket/index.js';
+import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 
 const app = express();
@@ -25,21 +26,26 @@ app.use(cors({ origin:corsOrigin }));
 app.use(express.json());
 // initSocket(server);
 
-const io = new Server(httpServer, {
-  cors: { origin: corsOrigin },
-  transports: ['websocket', 'polling'],
-});
-registerSocketHandlers(io);
+app.get('/api/health',(req,res)=>{
+    res.send("Healthy");
+})
 
 app.use('/api',routes)
+app.use(notFound);
+app.use(errorHandler);
 
 app.get('/', (req, res) => {
     res.send("Hello World");
 });
 
-app.get('/api/health',(req,res)=>{
-    res.send("Healthy");
-})
+
+
+const io = new Server(httpServer, {
+  cors: { origin: corsOrigin }, // SAME callback as Express
+  transports: ['websocket', 'polling'],
+});
+registerSocketHandlers(io);
+
 // try{
 //     await mongoose.connect(process.env.MONGODB_URI);
 //     console.log("Database connected")
