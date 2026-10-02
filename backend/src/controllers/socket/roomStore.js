@@ -20,7 +20,10 @@ const createRoom = (code) => {
     polls: [],                      
     decisions: [],                 
     transcripts: [],               
-    waitingRoom: new Map(),        
+    waitingRoom: new Map(),   
+    
+     // Face attendance
+    attendance: new Map(),
   };
   rooms.set(code, room);
   return room;
@@ -104,6 +107,22 @@ const patchParticipant = (code, socketId, patch) => {
   return true;
 };
 
+const tallyAttendance = (code, username, verified) => {
+  const room = rooms.get(code);
+  if (!room) return;
+  const entry = room.attendance.get(username) || {
+    totalChecks: 0, verifiedChecks: 0, lastUpdate: 0,
+  };
+  const now = Date.now();
+  // Cooldown: the honest client ticks every 10s. Anything faster than 8s is
+  // spam or a tampered client — counting it would let one socket inflate
+  // its own presence. Drop silently; no error feedback for attackers to tune.
+  if (now - entry.lastUpdate < 8000) return;
+  entry.lastUpdate = now;
+  entry.totalChecks += 1;
+  if (verified) entry.verifiedChecks += 1;
+  room.attendance.set(username, entry);
+};
 
 export const roomStore = {
   getRoom,
@@ -116,5 +135,6 @@ export const roomStore = {
   pushMessage,
   recentMessages,
   patchParticipant,
-  identityOf
+  identityOf,
+  tallyAttendance
 };

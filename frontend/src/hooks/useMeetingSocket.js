@@ -9,11 +9,7 @@ export const useMeetingSocket = (handlers) => {
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState(null);
 
-  // THE always-fresh-handlers pattern:
-  // handlersRef.current is updated on EVERY render, so callbacks can close
-  // over fresh state without the socket ever re-subscribing. Without this,
-  // you either subscribe to stale closures (bugs) or reconnect on every
-  // render (chaos).
+
   const handlersRef = useRef(handlers);
   handlersRef.current = handlers;
 
@@ -39,6 +35,15 @@ export const useMeetingSocket = (handlers) => {
       ['decisions-updated', (p) => handlersRef.current.onDecisions?.(p)],
       ['screen-share-started', (p) => handlersRef.current.onShareStarted?.(p)],
       ['screen-share-stopped', (p) => handlersRef.current.onShareStopped?.(p)],
+      // Phase 5 — AI features
+      ['transcript-received', (p) => handlersRef.current.onTranscript?.(p)],
+      ['live-attendance', (p) => handlersRef.current.onLiveAttendance?.(p)],
+      // Phase 7 — waiting room + owner powers
+      ['join-request', (p) => handlersRef.current.onJoinRequest?.(p)],
+      ['join-approved', (p) => handlersRef.current.onJoinApproved?.(p)],
+      ['join-rejected', (p) => handlersRef.current.onJoinRejected?.(p)],
+      ['meeting-dissolved', (p) => handlersRef.current.onDissolved?.(p)],
+      ['meeting-ended', (p) => handlersRef.current.onMeetingEnded?.(p)],
     ];
     pairs.forEach(([event, fn]) => socket.on(event, fn));
 
@@ -47,12 +52,13 @@ export const useMeetingSocket = (handlers) => {
       socket.disconnect();
     };
   }, []);
+
   const joinCall = useCallback(
-    (code, username, authUsername = null) =>
+    (code, username, isGuest = false, authUsername = null) =>
       new Promise((resolve, reject) => {
         socketRef.current?.emit(
           'join-call',
-          { code, username, authUsername },
+          { code, username, isGuest, authUsername },
           (res) => {
             if (res?.ok) resolve(res);
             else reject(new Error(res?.message || 'Could not join meeting'));

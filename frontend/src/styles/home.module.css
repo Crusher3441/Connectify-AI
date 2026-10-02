@@ -70,6 +70,29 @@
 
 .historyTitle { font-size: 1.05rem; margin-bottom: 12px; }
 
+
+.browseRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+  width: min(720px, 100%);
+}
+.browseCard {
+  background: var(--color-surface);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  padding: 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: left;
+}
+.browseCard:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
 .historyRow {
   display: flex;
   align-items: center;
