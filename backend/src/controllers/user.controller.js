@@ -66,10 +66,12 @@ export const loginUser = async (req, res) => {
     // ON the user document. Roadmap decision: DB token, not JWT — revocation
     // is trivial (overwrite/null the field) and there's no signature to
     // misconfigure. Re-login ROTATES the token → the previous session dies.
-    user.token = crypto.randomBytes(32).toString('hex');
+    user.token = crypto.randomBytes(32).toString('hex');           //Random bytes binary form mein hote hain. Unhe directly token ki tarah HTTP/localStorage mein rakhna convenient nahi hota thats why we did .toString()
+    // Token valid for 1 day
+    user.tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await user.save();
 
-    return res.json({
+    return res.json({                    // return to frontend
       token: user.token,
       user: { name: user.name, username: user.username },
     });

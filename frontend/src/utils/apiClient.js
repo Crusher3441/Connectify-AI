@@ -6,7 +6,7 @@ export const apiClient = axios.create({
   baseURL: `${BACKEND_URL}/api/v1`,
 });
 
-apiClient.interceptors.request.use((config) => {
+apiClient.interceptors.request.use((config) => {  // Jab bhi apiClient se request jaane wali ho, pehle iss function ko chalao
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -15,7 +15,7 @@ apiClient.interceptors.request.use((config) => {
 });
 
 // One 401 behavior app-wide: an expired/rotated token means the session is dead → clear storage and land on /auth.
-apiClient.interceptors.response.use((res) => res,(err) => {
+apiClient.interceptors.response.use((res) => res,(err) => {               // Backend se response aane ke baad pehle mere function ko chalao
     const url = err.config?.url || '';
     const isAuthCall = url.includes('/login') || url.includes('/register');
     if (err.response?.status === 401 && !isAuthCall) {
