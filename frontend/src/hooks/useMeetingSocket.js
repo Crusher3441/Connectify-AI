@@ -27,9 +27,18 @@ export const useMeetingSocket = (handlers) => {
       ['connect', () => { setConnected(true); setError(null); }],
       ['disconnect', () => setConnected(false)],
       ['connect_error', (err) => setError(err.message)],
+      // Phase 3 — mesh lifecycle + signaling (unchanged)
       ['user-joined', (p) => handlersRef.current.onUserJoined?.(p)],
       ['participant-left', (p) => handlersRef.current.onParticipantLeft?.(p)],
       ['signal', (p) => handlersRef.current.onSignal?.(p)],
+      // Phase 4 — collaboration (handlers fill in through 4G)
+      ['chat-received', (p) => handlersRef.current.onChatReceived?.(p)],
+      ['participant-list', (p) => handlersRef.current.onRoster?.(p)],
+      ['reaction-received', (p) => handlersRef.current.onReaction?.(p)],
+      ['polls-updated', (p) => handlersRef.current.onPolls?.(p)],
+      ['decisions-updated', (p) => handlersRef.current.onDecisions?.(p)],
+      ['screen-share-started', (p) => handlersRef.current.onShareStarted?.(p)],
+      ['screen-share-stopped', (p) => handlersRef.current.onShareStopped?.(p)],
     ];
     pairs.forEach(([event, fn]) => socket.on(event, fn));
 
@@ -38,16 +47,17 @@ export const useMeetingSocket = (handlers) => {
       socket.disconnect();
     };
   }, []);
-
-  // join-call as a promise: resolves with room state, rejects with the
-  // server's validation message. Wraps the raw ack callback
   const joinCall = useCallback(
-    (code, username) =>
+    (code, username, authUsername = null) =>
       new Promise((resolve, reject) => {
-        socketRef.current?.emit('join-call', { code, username }, (res) => {
-          if (res?.ok) resolve(res);
-          else reject(new Error(res?.message || 'Could not join meeting'));
-        });
+        socketRef.current?.emit(
+          'join-call',
+          { code, username, authUsername },
+          (res) => {
+            if (res?.ok) resolve(res);
+            else reject(new Error(res?.message || 'Could not join meeting'));
+          }
+        );
       }),
     []
   );

@@ -73,6 +73,7 @@
   font-size: 0.9rem;
 }
 
+/* ---- chat ---- */
 .chat {
   display: flex;
   flex-direction: column;
@@ -152,3 +153,45 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* ---- polls & decisions ---- */
+.pollForm, .poll, .decision {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.formError { color: var(--color-danger); font-size: 0.8rem; }
+
+.linkBtn {
+  background: none; border: none; color: var(--color-primary);
+  cursor: pointer; text-align: left; padding: 0; font-size: 0.85rem;
+}
+
+.pollQ { font-weight: 600; font-size: 0.95rem; }
+
+.pollOption {
+  position: relative;
+  background: none;
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+}
+.pollOption:hover { border-color: var(--color-primary); }
+
+.pollBar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--color-primary);
+  opacity: 0.25;
+  transition: width 0.3s ease;
+}
+
+.pollLabel { position: relative; font-size: 0.9rem; }

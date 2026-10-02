@@ -1,7 +1,3 @@
-// ⚠️ CORRECTION (C1): `useRef` was MISSING from this import list while the
-// component calls `useRef(...)` several times. React does not put hooks on the
-// global scope, so this threw `ReferenceError: useRef is not defined` on the
-// very first render — /meeting/:code was a guaranteed blank page.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext'; // Phase 2
@@ -80,6 +76,7 @@ export default function VideoMeet() {
   });
 
   const collab = useMeetingCollab({ socketRef, activeTab });
+  console.log(collab)
   collabRef.current = collab;      // always-fresh (same pattern as handlersRef)
 
   
