@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Box, Button, CircularProgress, Paper, Tab, Tabs, TextField, Typography} from '@mui/material';
+import {Alert, Box, Button, CircularProgress, Paper, Tab, Tabs, TextField, Typography} from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
@@ -15,15 +15,15 @@ export default function AuthenticationPage() {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  // Already signed in? redirect to home
+  // Already signed in? /auth is not for you.
   useEffect(() => {
     if (user) navigate('/home', { replace: true });
   }, [user, navigate]);
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  // Client checks MIRROR the server's rules for instant feedback
-  // The server re-validates everything these can never be the gate
+  // Client checks MIRROR the server's rules (2B) for instant feedback.
+  // The server re-validates everything — these can never be the gate (R5).
   const validate = () => {
     if (mode === 1 && form.name.trim().length < 2) return 'Name must be at least 2 characters';
     if (!USERNAME_RE.test(form.username.trim())) return 'Username: 3–20 letters, numbers or underscores';
@@ -46,7 +46,8 @@ export default function AuthenticationPage() {
         navigate('/home');
       } else {
         await register({ name: form.name.trim(), username: form.username.trim(), password: form.password });
-        // Explicit flow: account created then flip to Login with the username prefilled
+        // Explicit flow: account created → flip to Login with the username
+        // prefilled. One credential-issuing path (2C), one UI.
         setMode(0);
         setNotice('Account created — log in to continue.');
       }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import styles from '../styles/home.module.css';
 
-// Cryptographically random meeting code Math.random() is
+// Cryptographically random meeting code (audit #14). Math.random() is
 // predictable — its output must never gate access to anything.
 const newMeetingCode = () => crypto.randomUUID().split('-')[0]; // e.g. "a3f2b1c4"
 
@@ -23,7 +23,7 @@ export default function HomePage() {
 
   // Create → register in history → navigate. The history POST is not
   // bookkeeping: Phase 7's waiting room reads Meeting docs to decide who
-  // the host is. This line IS the host registry.
+  // the host is (decision D1). This line IS the host registry.
   const createMeeting = async () => {
     setError(null);
     const code = newMeetingCode();

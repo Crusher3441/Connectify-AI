@@ -9,6 +9,8 @@
 const rooms = new Map();        // meetingCode → Room
 const socketToRoom = new Map(); // socketId → meetingCode (fast disconnect lookup)
 
+const identityOf = (username, authUsername) => String(authUsername || username || '').trim().toLowerCase();
+
 const createRoom = (code) => {
   const room = {
     code,
@@ -28,14 +30,24 @@ const getRoom = (code) => rooms.get(code) || null;
 
 const getOrCreateRoom = (code) => rooms.get(code) || createRoom(code);
 
-const addParticipant = (code, socketId, username) => {
+const addParticipant = (code, socketId, username, authUsername=null) => {
   const room = getOrCreateRoom(code);
   const isOwner = room.participants.size === 0;
-  if (isOwner) room.ownerSocketId = socketId;
-  room.participants.set(socketId, {
+  if (isOwner){
+    room.ownerSocketId = socketId;
+    room.ownerUsername = username;
+    room.ownerIdentity = identityOf(username, authUsername);
+
+  } 
+   room.participants.set(socketId, {
     username,
+    authUsername,
+    identity: identityOf(username, authUsername),
     isOwner,
     joinedAt: new Date().toISOString(),
+    micOn: true,      
+    camOn: true,
+    raisedHand: false,
   });
   socketToRoom.set(socketId, code);
   return { isOwner };
@@ -72,6 +84,27 @@ const roomSummary = (code) => {
 
 const debugSnapshot = () => [...rooms.keys()].map(roomSummary);
 
+const pushMessage = (code, message) => {
+  const room = rooms.get(code);
+  if (!room) return;
+  room.messages.push(message);
+  if (room.messages.length > 200) room.messages.shift(); // cap: memory is finite
+};
+
+const recentMessages = (code, n = 50) => {
+  const room = rooms.get(code);
+  return room ? room.messages.slice(-n) : [];
+};
+
+const patchParticipant = (code, socketId, patch) => {
+  const room = rooms.get(code);
+  const p = room?.participants.get(socketId);
+  if (!p) return false;
+  Object.assign(p, patch);
+  return true;
+};
+
+
 export const roomStore = {
   getRoom,
   getOrCreateRoom,
@@ -80,4 +113,8 @@ export const roomStore = {
   getRoomCodeForSocket,
   roomSummary,
   debugSnapshot,
+  pushMessage,
+  recentMessages,
+  patchParticipant,
+  identityOf
 };

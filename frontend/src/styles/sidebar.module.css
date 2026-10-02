@@ -1,0 +1,197 @@
+.sidebar {
+  width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  min-height: 0;
+}
+
+.tabs {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  min-height: 48px;
+}
+
+.panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  min-height: 0;
+}
+
+/* ---- shared panel primitives (chat/people/polls reuse these) ---- */
+.panelTitle {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin: 4px 4px 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px;
+  border-radius: var(--radius-md);
+}
+.row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.pname {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.empty {
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 32px 12px;
+  font-size: 0.9rem;
+}
+
+/* ---- chat ---- */
+.chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+  min-height: 0;
+}
+
+.msg {
+  display: flex;
+  flex-direction: column;
+  align-self: flex-start;
+  max-width: 85%;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+}
+.msg.mine {
+  align-self: flex-end;
+  background: var(--color-primary);
+}
+
+.msgName {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.msgText {
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;   /* long links/words can't blow out the layout */
+}
+
+.msgTime {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  align-self: flex-end;
+}
+
+.chatForm {
+  display: flex;
+  gap: 8px;
+  padding-top: 10px;
+}
+
+.chatInput {
+  flex: 1;
+  background: var(--color-bg);
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  padding: 10px 12px;
+  font-size: 0.92rem;
+  outline: none;
+}
+.chatInput:focus {
+  border-color: var(--color-primary);
+}
+
+.sendBtn {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0 16px;
+  cursor: pointer;
+}
+.sendBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---- polls & decisions ---- */
+.pollForm, .poll, .decision {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.formError { color: var(--color-danger); font-size: 0.8rem; }
+
+.linkBtn {
+  background: none; border: none; color: var(--color-primary);
+  cursor: pointer; text-align: left; padding: 0; font-size: 0.85rem;
+}
+
+.pollQ { font-weight: 600; font-size: 0.95rem; }
+
+.pollOption {
+  position: relative;
+  background: none;
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+}
+.pollOption:hover { border-color: var(--color-primary); }
+
+.pollBar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--color-primary);
+  opacity: 0.25;
+  transition: width 0.3s ease;
+}
+
+.pollLabel { position: relative; font-size: 0.9rem; }

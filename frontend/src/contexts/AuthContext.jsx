@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { apiClient } from '../utils/apiClient';
 
 const AuthContext = createContext(null);
@@ -22,6 +22,20 @@ export function AuthProvider({ children }) {
     setUser(newUser);
   };
 
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setToken(null);
+    setUser(null);
+  }, []);
+
+
+  useEffect(() => {
+    window.addEventListener('auth:session-expired', logout);
+    return () => window.removeEventListener('auth:session-expired', logout);
+  }, [logout]);
+
+
   const register = useCallback(async ({ name, username, password }) => {
     const res = await apiClient.post('/users/register', { name, username, password });
     return res.data; // 201, no token — the user logs in explicitly (2I wires that step)
@@ -31,13 +45,6 @@ export function AuthProvider({ children }) {
     const res = await apiClient.post('/users/login', { username, password });
     persist(res.data.token, res.data.user);
     return res.data.user;
-  }, []);
-
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
   }, []);
 
   const fetchHistory = useCallback(async () => {
@@ -52,7 +59,7 @@ export function AuthProvider({ children }) {
 
   const value = useMemo(
     () => ({ token, user, register, login, logout, fetchHistory, addMeetingToHistory }),
-    [token, user, register, logout, fetchHistory, addMeetingToHistory]
+    [token, user, register, login, logout, fetchHistory, addMeetingToHistory]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

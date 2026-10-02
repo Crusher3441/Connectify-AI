@@ -11,3 +11,4 @@ const meetingSchema = new mongoose.Schema(
 );
 
 export default mongoose.model('Meeting', meetingSchema);
+  

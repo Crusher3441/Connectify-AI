@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import User from '../models/user.model.js';
 import crypto from 'node:crypto';
 import Meeting from '../models/meeting.model.js';
+import { recordMeeting } from './meeting.controller.js';
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
 
@@ -86,14 +87,10 @@ export const getUserHistory = async (req, res) => {
 
 export const addMeetingToHistory = async (req, res) => {
   const { meetingCode } = req.body || {};
-  
-  if (!meetingCode || !/^[a-z0-9]{4,12}$/i.test(String(meetingCode))) {
-    return res.status(400).json({ message: 'Invalid meeting code' });
+  try {
+    const meeting = await recordMeeting({ meetingCode, username: req.user.username });
+    return res.status(201).json(meeting);
+  } catch (err) {
+    return res.status(err.status || 400).json({ message: err.message });
   }
-  const meeting = await Meeting.create({
-    user_id: req.user.username,
-    meetingCode: String(meetingCode).toLowerCase(),
-    meetingOwner: req.user.username,
-  });
-  return res.status(201).json(meeting);
 };
