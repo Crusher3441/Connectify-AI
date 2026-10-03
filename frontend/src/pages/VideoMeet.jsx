@@ -1,68 +1,88 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext'; // Phase 2
-import { useMeetingSocket } from '../hooks/useMeetingSocket';
-import { useMediaStream } from '../hooks/useMediaStream';
-import { useWebRTC } from '../hooks/useWebRTC';
-import { useMeetingCollab } from '../hooks/useMeetingCollab';
-import { useScreenShare } from '../hooks/useScreenShare';
-import LobbyView from '../components/meeting/LobbyView';
-import VideoGrid from '../components/meeting/VideoGrid';
-import MeetingControls from '../components/meeting/MeetingControls';
-import Sidebar from '../components/meeting/Sidebar';
-import ReactionsOverlay from '../components/meeting/ReactionsOverlay';
-import ChatPanel from '../components/meeting/sidebar/ChatPanel';
-import ParticipantsPanel from '../components/meeting/sidebar/ParticipantsPanel';
-import PollsPanel from '../components/meeting/sidebar/PollsPanel';
-import TranscriptPanel from '../components/meeting/sidebar/TranscriptPanel';
-import AttendancePanel from '../components/meeting/sidebar/AttendancePanel';
-import EnrollmentModal from '../components/EnrollmentModal';
-import { useFaceAttendance } from '../hooks/useFaceAttendance';
-import { useSpeechTranscription } from '../hooks/useSpeechTranscription';
-import styles from '../styles/videoComponent.module.css';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext"; // Phase 2
+import { useMeetingSocket } from "../hooks/useMeetingSocket";
+import { useMediaStream } from "../hooks/useMediaStream";
+import { useWebRTC } from "../hooks/useWebRTC";
+import { useMeetingCollab } from "../hooks/useMeetingCollab";
+import { useScreenShare } from "../hooks/useScreenShare";
+import LobbyView from "../components/meeting/LobbyView";
+import VideoGrid from "../components/meeting/VideoGrid";
+import MeetingControls from "../components/meeting/MeetingControls";
+import Sidebar from "../components/meeting/Sidebar";
+import ReactionsOverlay from "../components/meeting/ReactionsOverlay";
+import ChatPanel from "../components/meeting/sidebar/ChatPanel";
+import ParticipantsPanel from "../components/meeting/sidebar/ParticipantsPanel";
+import PollsPanel from "../components/meeting/sidebar/PollsPanel";
+import TranscriptPanel from "../components/meeting/sidebar/TranscriptPanel";
+import AttendancePanel from "../components/meeting/sidebar/AttendancePanel";
+import EnrollmentModal from "../components/EnrollmentModal";
+import { useFaceAttendance } from "../hooks/useFaceAttendance";
+import { useSpeechTranscription } from "../hooks/useSpeechTranscription";
+import styles from "../styles/videoComponent.module.css";
 
 export default function VideoMeet() {
   const { code } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const location = useLocation();
+  const { user, token } = useAuth();
 
-  const [phase, setPhase] = useState('lobby');        // 'lobby' | 'room'
-  const [username, setUsername] = useState(user?.name || '');
+  const guestInfo = location.state?.guest
+    ? { name: location.state.name }
+    : null;
+
+  const isGuest = !!guestInfo;
+
+  const [phase, setPhase] = useState("lobby"); // 'lobby' | 'room'
+  const [username, setUsername] = useState(user?.name || "");
   const [joinError, setJoinError] = useState(null);
-  const [activeTab, setActiveTab] = useState('chat'); // sidebar tab (4A)
+  const [activeTab, setActiveTab] = useState("chat"); // sidebar tab (4A)
   const [mySocketId, setMySocketId] = useState(null);
 
+  useEffect(() => {
+    if (!token && !guestInfo) {
+      navigate(`/join/${code}`, { replace: true });
+    }
+  }, [token, guestInfo, code, navigate]);
   // ---- Phase 5 state ----
   const [enrollmentOpen, setEnrollmentOpen] = useState(false); // 5B — once per meeting
   const [enrolledDescriptor, setEnrolledDescriptor] = useState(null); // gates 5E's loop
-  const [liveAttendance, setLiveAttendance] = useState([]);  // owner-only (5F)
+  const [liveAttendance, setLiveAttendance] = useState([]); // owner-only (5F)
   const detectVideoRef = useRef(null);
-  
+
   const [videoReady, setVideoReady] = useState(false);
 
   // ---- hooks (each owns ONE concern) ----
   const {
-    localStream, micOn, camOn, error: mediaError,
-    startStream, toggleMic, toggleCam, stopStream, streamRef: mediaRef,
+    localStream,
+    micOn,
+    camOn,
+    error: mediaError,
+    startStream,
+    toggleMic,
+    toggleCam,
+    stopStream,
+    streamRef: mediaRef,
   } = useMediaStream();
 
   // Emit signals through a ref so useWebRTC can be created before the socket.
   const emitSignalRef = useRef((to, data) => {});
 
- 
-  const emitSignal = useCallback((to, data) => emitSignalRef.current(to, data), []);
+  const emitSignal = useCallback(
+    (to, data) => emitSignalRef.current(to, data),
+    [],
+  );
 
   const webrtc = useWebRTC(emitSignal);
 
   // collabRef breaks the socket↔collab wiring cycle (same trick as emitSignalRef)
   const collabRef = useRef(null);
 
-  
   const screenSharePropsRef = useRef(null);
   screenSharePropsRef.current = {
     getCameraTrack: () => mediaRef?.current?.getVideoTracks()[0] || null,
-    onShareStarted: () => socketRef.current?.emit('screen-share-started'),
-    onShareStopped: () => socketRef.current?.emit('screen-share-stopped'),
+    onShareStarted: () => socketRef.current?.emit("screen-share-started"),
+    onShareStopped: () => socketRef.current?.emit("screen-share-stopped"),
   };
   const screenShare = useScreenShare({
     peersRef: webrtc.peersRef,
@@ -71,28 +91,29 @@ export default function VideoMeet() {
 
   const { socketRef, connected, joinCall } = useMeetingSocket({
     onUserJoined: ({ socketId, username: name }) => {
-      webrtc.handleNewPeer(socketId);           // mesh dialing — UNCHANGED
+      webrtc.handleNewPeer(socketId); // mesh dialing — UNCHANGED
       // roster placeholder until the authoritative broadcast lands:
       collabRef.current?.handleRosterMember({ socketId, username: name });
     },
     onParticipantLeft: ({ socketId }) => {
-      webrtc.removePeer(socketId);              // mesh cleanup — UNCHANGED
+      webrtc.removePeer(socketId); // mesh cleanup — UNCHANGED
       collabRef.current?.removeRosterMember(socketId);
     },
     onSignal: (payload) => webrtc.handleSignal(payload),
-    onRoster: (p) => collabRef.current?.handleRoster(p),          // full state
+    onRoster: (p) => collabRef.current?.handleRoster(p), // full state
     onChatReceived: (p) => collabRef.current?.handleIncomingChat(p),
     onReaction: (p) => collabRef.current?.handleReaction(p),
     onPolls: (p) => collabRef.current?.handlePolls(p),
     onDecisions: (p) => collabRef.current?.handleDecisions(p),
-    onShareStarted: ({ socketId: sid }) => collabRef.current?.handleShareStarted(sid),
+    onShareStarted: ({ socketId: sid }) =>
+      collabRef.current?.handleShareStarted(sid),
     onShareStopped: () => collabRef.current?.handleShareStopped(),
-    onTranscript: (p) => collabRef.current?.handleIncomingTranscript(p),   
-    onLiveAttendance: (p) => setLiveAttendance(p),                          
+    onTranscript: (p) => collabRef.current?.handleIncomingTranscript(p),
+    onLiveAttendance: (p) => setLiveAttendance(p),
   });
 
   const collab = useMeetingCollab({ socketRef, activeTab });
-  collabRef.current = collab;      // always-fresh (same pattern as handlersRef)
+  collabRef.current = collab; // always-fresh (same pattern as handlersRef)
 
   // ---- Phase 5 hooks ----
   const { matchState } = useFaceAttendance({
@@ -105,22 +126,21 @@ export default function VideoMeet() {
 
   const speech = useSpeechTranscription((text) => {
     const entry = { username: username, text, at: new Date().toISOString() };
-    collab.addLocalTranscript(entry);                       // my screen shows it now
-    socketRef.current?.emit('transcript-entry', { text });  // everyone else gets it attributed
+    collab.addLocalTranscript(entry); // my screen shows it now
+    socketRef.current?.emit("transcript-entry", { text }); // everyone else gets it attributed
   });
 
-  const isOwner = collab.roster.find((p) => p.socketId === mySocketId)?.isOwner || false;
+  const isOwner =
+    collab.roster.find((p) => p.socketId === mySocketId)?.isOwner || false;
 
- 
   useEffect(() => {
     emitSignalRef.current = (to, data) => {
-      socketRef.current?.emit('signal', { to, data });
+      socketRef.current?.emit("signal", { to, data });
     };
   }, [socketRef]);
 
   // Keep WebRTC's notion of "me" and "my media" current.
   useEffect(() => {
-   
     if (connected && socketRef.current?.id) {
       webrtc.setMySocketId(socketRef.current.id);
       setMySocketId(socketRef.current.id);
@@ -131,19 +151,17 @@ export default function VideoMeet() {
     webrtc.setLocalStream(localStream);
   }, [localStream, webrtc]);
 
-  
   useEffect(() => {
-    if (phase === 'lobby') startStream();
+    if (phase === "lobby") startStream();
   }, [phase, startStream]);
 
-  
   useEffect(() => {
-    if (connected) socketRef.current?.emit('media-state', { micOn, camOn });
+    if (connected) socketRef.current?.emit("media-state", { micOn, camOn });
   }, [micOn, camOn, connected, socketRef]);
 
   // opening the chat tab clears its badge
   useEffect(() => {
-    if (activeTab === 'chat') collab.clearUnread();
+    if (activeTab === "chat") collab.clearUnread();
   }, [activeTab, collab]);
 
   // ---- join pipeline (lobby button) ----
@@ -158,7 +176,7 @@ export default function VideoMeet() {
     webrtc.setLocalStream(stream);
     try {
       const res = await joinCall(code, username.trim(), user?.username || null);
-     
+
       const myId = socketRef.current?.id;
       if (myId) webrtc.setMySocketId(myId);
       setMySocketId(myId);
@@ -167,17 +185,28 @@ export default function VideoMeet() {
       for (const p of res.participants) {
         if (myId && p.socketId !== myId) webrtc.handleNewPeer(p.socketId);
       }
-      collab.seedFromJoin(res);          // 4B/4F/5H — history for all full-state channels
+      collab.seedFromJoin(res); // 4B/4F/5H — history for all full-state channels
       collab.handleRoster(res.participants); // 4C — initial roster from ack
-      setPhase('room');
-      setEnrollmentOpen(true);           // 5B — offer enrollment once per meeting
+      setPhase("room");
+      setEnrollmentOpen(true); // 5B — offer enrollment once per meeting
       // ⚠️ CORRECTION (H1): the FIRST valid media-state announcement. Without
       // this the roster has no micOn/camOn keys until the first toggle.
-      socketRef.current?.emit('media-state', { micOn, camOn });
+      socketRef.current?.emit("media-state", { micOn, camOn });
     } catch (err) {
       setJoinError(err.message);
     }
-  }, [code, username, user, startStream, joinCall, socketRef, webrtc, collab, micOn, camOn]);
+  }, [
+    code,
+    username,
+    user,
+    startStream,
+    joinCall,
+    socketRef,
+    webrtc,
+    collab,
+    micOn,
+    camOn,
+  ]);
 
   // ---- 5C: enrollment contract (modal captures, parent owns the socket) ----
   // const handleEnrollConfirm = useCallback(async (descriptor) => {
@@ -192,40 +221,42 @@ export default function VideoMeet() {
   //   return false;
   // }, [socketRef]);
 
-  const handleEnrollConfirm = useCallback(async (descriptor) => {
-  console.log("[enrollment] descriptor:", descriptor?.length);
+  const handleEnrollConfirm = useCallback(
+    async (descriptor) => {
+      console.log("[enrollment] descriptor:", descriptor?.length);
 
-  const res = await new Promise((resolve) => {
-    socketRef.current?.emit("register-face", { descriptor }, (r) => {
-      resolve(r);
-    });
-  });
+      const res = await new Promise((resolve) => {
+        socketRef.current?.emit("register-face", { descriptor }, (r) => {
+          resolve(r);
+        });
+      });
 
-  console.log("[enrollment] server response:", res);
+      console.log("[enrollment] server response:", res);
 
-  if (res?.ok) {
-    console.log("[enrollment] SUCCESS");
+      if (res?.ok) {
+        console.log("[enrollment] SUCCESS");
 
-    setEnrolledDescriptor(descriptor);
-    setEnrollmentOpen(false);
+        setEnrolledDescriptor(descriptor);
+        setEnrollmentOpen(false);
 
-    return true;
-  }
+        return true;
+      }
 
-  return false;
-}, [socketRef]);
-
+      return false;
+    },
+    [socketRef],
+  );
 
   // ---- THE TEARDOWN ORDER, now five steps (strict!) ----
   const handleLeave = useCallback(() => {
-    screenShare.stopShare();         // 0. revert video senders to camera, stop display
-    stopStream();                    // 1. stop capture — camera light off, tracks dead
-    webrtc.closeAllPeers();          // 2. close every RTCPeerConnection
+    screenShare.stopShare(); // 0. revert video senders to camera, stop display
+    stopStream(); // 1. stop capture — camera light off, tracks dead
+    webrtc.closeAllPeers(); // 2. close every RTCPeerConnection
     socketRef.current?.disconnect(); // 3. kill signaling (server fires disconnect cleanup)
     // 5K handoff: the summary is generated AFTER every socket is gone, so a
     // broadcast would reach nobody. Home picks this up over REST instead.
-    sessionStorage.setItem('pendingSummary', code);
-    navigate('/home');               // 4. only now leave the page
+    sessionStorage.setItem("pendingSummary", code);
+    navigate("/home"); // 4. only now leave the page
   }, [screenShare, stopStream, webrtc, socketRef, navigate, code]);
 
   const handleToggleShare = useCallback(async () => {
@@ -240,7 +271,7 @@ export default function VideoMeet() {
     return () => closeAllPeersRef.current();
   }, []);
 
-  if (phase === 'lobby') {
+  if (phase === "lobby") {
     return (
       <LobbyView
         code={code}
@@ -263,7 +294,9 @@ export default function VideoMeet() {
         mySocketId={mySocketId}
       />
     ),
-    people: <ParticipantsPanel roster={collab.roster} mySocketId={mySocketId} />,
+    people: (
+      <ParticipantsPanel roster={collab.roster} mySocketId={mySocketId} />
+    ),
     polls: (
       <PollsPanel
         polls={collab.polls}
@@ -287,8 +320,6 @@ export default function VideoMeet() {
     attendance: <AttendancePanel snapshot={liveAttendance} />,
   };
 
-  
-
   return (
     <main className={styles.meetingRoot}>
       <div className={styles.body}>
@@ -298,7 +329,7 @@ export default function VideoMeet() {
             remoteStreams={webrtc.remoteStreams}
             myName={username}
             mySocketId={mySocketId}
-            nameFor={(id) => metaFor(id)?.username || 'Guest'}
+            nameFor={(id) => metaFor(id)?.username || "Guest"}
             metaFor={metaFor}
             sharerId={collab.sharerId}
             localMatchState={matchState}
@@ -312,13 +343,21 @@ export default function VideoMeet() {
                 if (el) {
                   el.srcObject = localStream;
                   el.play().catch(() => {});
-                  setVideoReady(true);   // ← CORRECTION (C5): signal "mounted"
+                  setVideoReady(true); // ← CORRECTION (C5): signal "mounted"
                 } else {
                   setVideoReady(false);
                 }
               }}
-              autoPlay playsInline muted
-              style={{ position: 'absolute', width: 2, height: 2, opacity: 0, pointerEvents: 'none' }}
+              autoPlay
+              playsInline
+              muted
+              style={{
+                position: "absolute",
+                width: 2,
+                height: 2,
+                opacity: 0,
+                pointerEvents: "none",
+              }}
             />
           )}
           <ReactionsOverlay
