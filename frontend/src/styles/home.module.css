@@ -70,7 +70,7 @@
 
 .historyTitle { font-size: 1.05rem; margin-bottom: 12px; }
 
-
+/* ---- 6E: browse cards linking to the Phase 6 pages ---- */
 .browseRow {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));

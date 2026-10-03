@@ -195,3 +195,18 @@
 }
 
 .pollLabel { position: relative; font-size: 0.9rem; }
+
+/* ---- 5F: live attendance (owner only) ---- */
+.attRow { margin-bottom: 12px; }
+.attHead { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.attBar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.attFill {
+  height: 100%;
+  background: var(--color-success);
+  transition: width 0.5s ease;
+}

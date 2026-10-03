@@ -157,5 +157,14 @@
   cursor: pointer;
   padding: 4px;
 }
-.pickerBtn:hover { transform: scale(1.25); }
+/* ---- 5E: local face-match border (LOCAL tile only) ---- */
+.verified {
+  outline: 2px solid var(--color-success);
+  outline-offset: -2px;
+}
+.unverified {
+  outline: 2px solid var(--color-danger);
+  outline-offset: -2px;
+}
 
+.pickerBtn:hover { transform: scale(1.25); }
