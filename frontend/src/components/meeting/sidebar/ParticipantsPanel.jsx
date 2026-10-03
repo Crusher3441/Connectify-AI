@@ -11,6 +11,9 @@ export default function ParticipantsPanel({ roster, mySocketId }) {
             {p.username}
             {p.socketId === mySocketId ? ' (you)' : ''}
           </span>
+          {/* 7B — guests are visibly marked so members know why they are absent
+              from the attendance report. */}
+          {p.isGuest && <span className={styles.meta}>guest</span>}
           {p.isOwner && <span title="Meeting owner">👑</span>}
           {p.raisedHand && <span title="Hand raised">✋</span>}
           <span className={styles.meta}>

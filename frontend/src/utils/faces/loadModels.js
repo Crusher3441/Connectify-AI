@@ -20,8 +20,7 @@ export const loadFaceModels = () => {
   return loadingPromise;
 };
 
-export const detectorOptions = () =>
-  new faceapi.TinyFaceDetectorOptions({
-    inputSize: 160,       // 128–512; smaller = faster, less accurate
-    scoreThreshold: 0.5,  // min confidence to accept a detection
-  });
+export const DEFAULT_THRESHOLD = 0.3;
+export const DEFAULT_INPUT_SIZE = 320;
+
+export const detectorOptions = (scoreThreshold = DEFAULT_THRESHOLD, inputSize = DEFAULT_INPUT_SIZE) => new faceapi.TinyFaceDetectorOptions({ inputSize, scoreThreshold });

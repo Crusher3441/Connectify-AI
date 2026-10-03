@@ -3,7 +3,7 @@ import styles from '../../styles/videoComponent.module.css';
 
 const EMOJIS = ['👍', '👏', '❤️', '😂', '😮', '🎉', '🙌', '🔥'];
 
-export default function MeetingControls({ micOn, camOn, handRaised, sharing, onToggleMic, onToggleCam, onToggleHand,  onToggleShare, onReact, onLeave }) {
+export default function MeetingControls({ micOn, camOn, isOwner = false ,onEndAll ,handRaised, sharing, onToggleMic, onToggleCam, onToggleHand,  onToggleShare, onReact, onLeave }) {
   const [showPicker, setShowPicker] = useState(false);
 
   return (
@@ -34,6 +34,17 @@ export default function MeetingControls({ micOn, camOn, handRaised, sharing, onT
       <button className={`${styles.ctrlBtn} ${styles.leaveBtn}`} onClick={onLeave}>
         Leave
       </button>
+      {isOwner && (
+        <button
+          className={`${styles.ctrlBtn} ${styles.leaveBtn}`}
+          onClick={() => {
+            // Friction, not a design system: this ends the call for everyone.
+            if (window.confirm('End the meeting for EVERYONE?')) onEndAll();
+          }}
+        >
+          End for all
+        </button>
+      )}
     </div>
   );
 }

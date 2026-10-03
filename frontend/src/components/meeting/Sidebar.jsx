@@ -3,19 +3,22 @@ import Tab from '@mui/material/Tab';
 import Badge from '@mui/material/Badge';
 import styles from '../../styles/sidebar.module.css';
 
-// Tab ids are stable strings; Phase 5 adds 'transcript' as one more entry.
-const TABS = [
+// Tab ids are stable strings; Phase 5 adds 'transcript' + owner-only 'attendance'.
+const TABS_BASE = [
   { id: 'chat', label: 'Chat' },
   { id: 'people', label: 'People' },
   { id: 'polls', label: 'Polls' },
-  // { id: 'transcript', label: 'Transcript' },  
+  { id: 'transcript', label: 'Transcript' },  // Phase 5
 ];
 
 // Props:
 //   active / onChange — controlled tab state (owned by VideoMeet)
-//   badges            — { chat: 3 } unread counts per tab id
-//   panels            — { chat: <ChatPanel/>, people: <…>, polls: <…> }
-export default function Sidebar({ active, onChange, badges = {}, panels = {} }) {
+//   isOwner          — owner-only data (attendance) gets its own tab (Phase 5)
+//   badges           — { chat: 3 } unread counts per tab id
+//   panels           — { chat: <ChatPanel/>, people: <…>, polls: <…> }
+export default function Sidebar({ active, onChange, isOwner = false, badges = {}, panels = {} }) {
+  const tabs = isOwner ? [...TABS_BASE, { id: 'attendance', label: 'Attendance' }] : TABS_BASE;
+
   return (
     <aside className={styles.sidebar}>
       <Tabs
@@ -24,7 +27,7 @@ export default function Sidebar({ active, onChange, badges = {}, panels = {} }) 
         variant="fullWidth"
         className={styles.tabs}
       >
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <Tab
             key={t.id}
             value={t.id}
@@ -41,4 +44,3 @@ export default function Sidebar({ active, onChange, badges = {}, panels = {} }) 
     </aside>
   );
 }
-

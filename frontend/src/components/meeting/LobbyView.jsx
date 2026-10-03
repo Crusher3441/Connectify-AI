@@ -1,15 +1,15 @@
-import { useState } from 'react';
 import styles from '../../styles/lobby.module.css';
 
 // Presentational pre-join screen.
 // Props:
 //   code        — meeting code from the URL
-//   username    — prefill from AuthContext (Phase 2)
+//   username    — prefill from AuthContext (Phase 2) or the guest form (7B)
 //   onUsername  — keep typed name in parent state
-//   stream      — local camera stream (owned by VideoMeet)
+//   stream      — local camera stream (owned by VideoMeet, Part 3D decision)
 //   error       — media error text (permission denied etc.)
 //   onJoin      — parent's join pipeline (start media → join-call → enter room)
-export default function LobbyView({ code, username, onUsername, stream, error, onJoin }) {
+//   awaiting    — 7A: request sent, the host has not answered yet
+export default function LobbyView({ code, username, onUsername, stream, error, onJoin, awaiting = false }) {
   const canJoin = username.trim().length >= 2 && !!stream;
 
   return (
@@ -41,9 +41,18 @@ export default function LobbyView({ code, username, onUsername, stream, error, o
           onChange={(e) => onUsername(e.target.value)}
         />
 
-        <button className={styles.joinBtn} disabled={!canJoin} onClick={onJoin}>
-          Join meeting
-        </button>
+        {/* 7A — awaiting replaces the button: the request is in, so re-clicking
+            would queue a duplicate pending entry for the same socket. */}
+        {awaiting ? (
+          <div className={styles.waiting}>
+            <div className={styles.spinner} />
+            <p>Waiting for the host to let you in…</p>
+          </div>
+        ) : (
+          <button className={styles.joinBtn} disabled={!canJoin} onClick={onJoin}>
+            Join meeting
+          </button>
+        )}
       </div>
     </main>
   );

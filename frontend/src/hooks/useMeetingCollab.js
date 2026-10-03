@@ -21,10 +21,25 @@ export const useMeetingCollab = ({ socketRef, activeTab }) => {
 
   const clearUnread = useCallback(() => setUnread(0), []);
 
-  const seedFromJoin = useCallback(({ participants = [], messages: history = [] }) => {
-    setMessages(history);
-    setUnread(0);
-  }, []);
+  // Seeds every full-state channel from the join ack, so a late joiner starts
+  // with chat history (4B), the current polls + decisions (4F), AND the live
+  // transcript history (5H) instead of empty panels that only fill on next event.
+  const seedFromJoin = useCallback(
+    ({
+      participants = [],
+      messages: history = [],
+      polls: initialPolls = [],
+      decisions: initialDecisions = [],
+      transcripts: initialTranscripts = [],
+    }) => {
+      setMessages(history);
+      setUnread(0);
+      setPolls(initialPolls);
+      setDecisions(initialDecisions);
+      setTranscripts(initialTranscripts);
+    },
+    []
+  );
 
   // ---- roster (4C) ----
   const [roster, setRoster] = useState([]);
@@ -39,16 +54,16 @@ export const useMeetingCollab = ({ socketRef, activeTab }) => {
     setRoster((prev) => prev.filter((x) => x.socketId !== socketId))
   , []);
 
-  // ---- hand raise ----
+  // ---- hand raise (4D) ----
   const toggleHand = useCallback(() => {
     socketRef.current?.emit('toggle-hand');
     // NO local state — the roster broadcast flips the button label.
     // One source of truth beats optimistic flicker at 100ms latency.
   }, [socketRef]);
 
-  // ---- reactions ----
+  // ---- reactions (4E) ----
   const [reactions, setReactions] = useState([]);
-
+  
   const reactionTimersRef = useRef(new Map());
   useEffect(() => {
     const timers = reactionTimersRef.current;
@@ -65,7 +80,7 @@ export const useMeetingCollab = ({ socketRef, activeTab }) => {
   const handleReaction = useCallback(({ emoji }) => {
     const key = crypto.randomUUID();
     const x = 10 + Math.random() * 80;                 // random horizontal spawn
-    
+
     setReactions((prev) => [...prev.slice(-29), { key, emoji, x }]);
     // evict after the animation window even if onAnimationEnd never fires
     const id = setTimeout(() => {
@@ -85,6 +100,7 @@ export const useMeetingCollab = ({ socketRef, activeTab }) => {
 
   const handlePolls = useCallback((list) => setPolls(list), []);
   const handleDecisions = useCallback((list) => setDecisions(list), []);
+
 
   const createPoll = useCallback((question, options) =>
     new Promise((resolve) => {
@@ -108,12 +124,22 @@ export const useMeetingCollab = ({ socketRef, activeTab }) => {
     socketRef.current?.emit('add-decision', { text });
   }, [socketRef]);
 
+  // ---- transcripts (5H) ----
+  const [transcripts, setTranscripts] = useState([]);
+
+  const addLocalTranscript = useCallback((entry) => {
+    setTranscripts((prev) => [...prev.slice(-499), entry]);
+  }, []);
+
+  const handleIncomingTranscript = useCallback((entry) => {
+    setTranscripts((prev) => [...prev.slice(-499), entry]);
+  }, []);
+
   // ---- screen share presence (4G) ----
   const [sharerId, setSharerId] = useState(null);
   const handleShareStarted = useCallback((socketId) => setSharerId(socketId), []);
   const handleShareStopped = useCallback(() => setSharerId(null), []);
 
-  
   return useMemo(
     () => ({
       // chat
@@ -130,6 +156,8 @@ export const useMeetingCollab = ({ socketRef, activeTab }) => {
       createPoll, vote, addDecision,
       // screen share
       sharerId, handleShareStarted, handleShareStopped,
+      // transcripts (Phase 5)
+      transcripts, addLocalTranscript, handleIncomingTranscript,
     }),
     [
       messages, unread, sendChat, clearUnread, handleIncomingChat, seedFromJoin,
@@ -138,6 +166,7 @@ export const useMeetingCollab = ({ socketRef, activeTab }) => {
       reactions, removeReaction, handleReaction, react,
       polls, decisions, handlePolls, handleDecisions, createPoll, vote, addDecision,
       sharerId, handleShareStarted, handleShareStopped,
+      transcripts, addLocalTranscript, handleIncomingTranscript,
     ]
   );
 };

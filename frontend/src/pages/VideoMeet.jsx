@@ -1,3 +1,7 @@
+// ⚠️ CORRECTION (C1): `useRef` was MISSING from this import list while the
+// component calls `useRef(...)` several times. React does not put hooks on the
+// global scope, so this threw `ReferenceError: useRef is not defined` on the
+// very first render — /meeting/:code was a guaranteed blank page.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext'; // Phase 2
@@ -17,7 +21,7 @@ import PollsPanel from '../components/meeting/sidebar/PollsPanel';
 import TranscriptPanel from '../components/meeting/sidebar/TranscriptPanel';
 import AttendancePanel from '../components/meeting/sidebar/AttendancePanel';
 import EnrollmentModal from '../components/EnrollmentModal';
-import ApprovalDialog from '../components/ApprovalDialog'; 
+import ApprovalDialog from '../components/ApprovalDialog'; // 7A
 import { useFaceAttendance } from '../hooks/useFaceAttendance';
 import { useSpeechTranscription } from '../hooks/useSpeechTranscription';
 import styles from '../styles/videoComponent.module.css';
@@ -28,13 +32,13 @@ export default function VideoMeet() {
   const location = useLocation();
   const { user, token } = useAuth();
 
-  // identity is EITHER a signed-in user OR a route-state guest.
+  // 7B — identity is EITHER a signed-in user OR a route-state guest.
   // `guestInfo` is null unless /join/:code handed us a name; the guard below
   // guarantees we never reach the room with neither.
   const guestInfo = location.state?.guest ? { name: location.state.name } : null;
   const isGuest = !!guestInfo;
 
-  // TWO identities travel together and must never be
+  // ⚠️ CORRECTION (H7): TWO identities travel together and must never be
   // conflated. `username` = DISPLAY name (typed in the lobby or the guest
   // form, shown on tiles). `user?.username` = LOGIN identity, which the server
   // persists in Face/Attendance/Transcript and which Phase 6 authorizes on.
@@ -121,9 +125,9 @@ export default function VideoMeet() {
   // its unmount cleanup stop the share immediately (see the hook).
   const screenSharePropsRef = useRef(null);
   screenSharePropsRef.current = {
-    getCameraTrack: () => mediaRef?.current?.getVideoTracks?.()[0] || null,
-    onShareStarted: () => socketRef?.current?.emit('screen-share-started'),
-    onShareStopped: () => socketRef?.current?.emit('screen-share-stopped'),
+    getCameraTrack: () => mediaRef.current?.getVideoTracks()[0] || null,
+    onShareStarted: () => socketRef.current?.emit('screen-share-started'),
+    onShareStopped: () => socketRef.current?.emit('screen-share-stopped'),
   };
   const screenShare = useScreenShare({
     peersRef: webrtc.peersRef,
@@ -244,6 +248,8 @@ export default function VideoMeet() {
   }, [activeTab, collab]);
 
   // ---- join pipeline (lobby button) ----
+
+  
   const enterRoom = useCallback((res) => {
     
     const myId = socketRef.current?.id;
@@ -260,8 +266,8 @@ export default function VideoMeet() {
     // 7B — guests have no login identity, so attendance enrollment is
     // meaningless for them. Offer the modal to members only.
     if (!isGuest) setEnrollmentOpen(true);
-     
-    // Without this the roster has no micOn/camOn keys until the first toggle.
+    // ⚠️ CORRECTION (H1): the FIRST valid media-state announcement. Without
+    // this the roster has no micOn/camOn keys until the first toggle.
     socketRef.current?.emit('media-state', { micOn, camOn });
   }, [webrtc, collab, socketRef, isGuest, micOn, camOn]);
 
@@ -333,7 +339,19 @@ export default function VideoMeet() {
     else await screenShare.startShare();
   }, [screenShare]);
 
-  
+  // Browser-back / tab-close safety net: close every peer on UNMOUNT ONLY.
+  //
+  // ⚠️ BUGFIX — this used to be `useEffect(() => () => webrtc.closeAllPeers(), [webrtc])`.
+  // That is still wrong even with a stable emitSignal, because useWebRTC's
+  // return memo deliberately depends on `remoteStreams` (so the grid re-renders
+  // when a peer connects). Every time a remote stream arrives, `webrtc` becomes
+  // a NEW object → this effect's cleanup fires → closeAllPeers() → the peer that
+  // JUST connected is destroyed. Symptom: both users appear connected, but media
+  // never flows and remote tiles stay empty.
+  //
+  // Fix: hold the teardown fn in a ref and run it with EMPTY deps, so it fires
+  // exactly once — on unmount — and never on a state change. (closeAllPeers is
+  // itself stable: it only closes peers, it does not depend on the media state.)
   const closeAllPeersRef = useRef(webrtc.closeAllPeers);
   closeAllPeersRef.current = webrtc.closeAllPeers;
 
