@@ -1,0 +1,161 @@
+.grid {
+  flex: 1;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  align-content: center;
+  /* 1–2 people: big tiles; more people: auto-fit smaller tiles */
+  grid-template-columns:
+    repeat(auto-fit, minmax(min(100%, calc(100% / 3 - 12px)), 1fr));
+}
+
+.tile {
+  position: relative;
+  background: #000;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+}
+
+.tile video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nameTag {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.controls {
+  position: relative;   /* anchors the emoji picker */
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--color-surface);
+}
+
+.ctrlBtn {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius-md);
+  padding: 11px 20px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.ctrlBtn:hover {
+  border-color: var(--color-primary);
+}
+
+.active {
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary);
+}
+
+.leaveBtn {
+  background: var(--color-danger);
+  color: #fff;
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.meetingRoot {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ---- 4A layout: video column + sidebar column ---- */
+.body {
+  flex: 1;
+  display: flex;
+  min-height: 0;      /* lets the sidebar scroll independently */
+}
+
+.stage {
+  position: relative; /* anchors the reactions overlay */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;       /* lets the grid shrink instead of overflowing */
+}
+
+/* ---- 4D hand raise ---- */
+.handBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.3rem;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6));
+  animation: handPop 0.25s ease-out;
+}
+@keyframes handPop {
+  from { transform: scale(0.3); }
+  to   { transform: scale(1); }
+}
+
+/* ---- 4G screen-share pill ---- */
+.sharePill {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.8rem;
+}
+
+/* ---- 4E emoji reactions ---- */
+.reactionOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;   /* clicks pass through to tiles */
+  overflow: hidden;
+  z-index: 5;
+}
+
+.reactionBubble {
+  position: absolute;
+  bottom: 0;
+  font-size: 2.2rem;
+  animation: rise 3.5s ease-in forwards;
+}
+@keyframes rise {
+  from { transform: translateY(0) scale(0.8); opacity: 1; }
+  60%  { opacity: 1; }
+  to   { transform: translateY(-70vh) scale(1.4); opacity: 0; }
+}
+
+.picker {
+  position: absolute;
+  bottom: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius-lg);
+  padding: 8px;
+  box-shadow: var(--shadow-1);
+}
+
+.pickerBtn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 4px;
+}
+.pickerBtn:hover { transform: scale(1.25); }
+

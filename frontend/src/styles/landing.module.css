@@ -1,0 +1,110 @@
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar {
+  display: flex;
+  padding: 20px 40px;
+}
+
+.logo {
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.logoAccent,
+.accent {
+  color: var(--color-primary);
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.content h1 {
+  font-size: clamp(2rem, 5vw, 3.4rem);
+}
+
+.tagline {
+  color: var(--color-text-muted);
+  font-size: 1.15rem;
+  max-width: 520px;
+}
+
+.actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.primaryBtn {
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 13px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.primaryBtn:hover {
+  background: var(--color-primary-hover);
+}
+
+.ghostBtn {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius-md);
+  padding: 13px 28px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.statusCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  padding: 12px 22px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-1);
+  color: var(--color-text-muted);
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+.up {
+  color: var(--color-success);
+}
+.up .statusDot {
+  background: var(--color-success);
+}
+.down {
+  color: var(--color-danger);
+}
+.down .statusDot {
+  background: var(--color-danger);
+}
+
+
+/* Keyboard focus visibility (Part 2M) */
+.primaryBtn:focus-visible,
+.ghostBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
