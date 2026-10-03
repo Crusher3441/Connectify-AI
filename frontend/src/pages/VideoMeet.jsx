@@ -1,7 +1,3 @@
-// ⚠️ CORRECTION (C1): `useRef` was MISSING from this import list while the
-// component calls `useRef(...)` several times. React does not put hooks on the
-// global scope, so this threw `ReferenceError: useRef is not defined` on the
-// very first render — /meeting/:code was a guaranteed blank page.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext'; // Phase 2
@@ -38,12 +34,7 @@ export default function VideoMeet() {
   const guestInfo = location.state?.guest ? { name: location.state.name } : null;
   const isGuest = !!guestInfo;
 
-  // ⚠️ CORRECTION (H7): TWO identities travel together and must never be
-  // conflated. `username` = DISPLAY name (typed in the lobby or the guest
-  // form, shown on tiles). `user?.username` = LOGIN identity, which the server
-  // persists in Face/Attendance/Transcript and which Phase 6 authorizes on.
-  // Guests have no login identity, so they pass null and the server falls back
-  // to the display name — correct, because guests are authorized against nothing.
+  
   const [phase, setPhase] = useState('lobby');  // 'lobby' | 'awaiting' | 'room'
   const [username, setUsername] = useState(guestInfo?.name || user?.name || '');
   const [joinError, setJoinError] = useState(null);
@@ -51,25 +42,11 @@ export default function VideoMeet() {
   const [mySocketId, setMySocketId] = useState(null);
   const [joinRequests, setJoinRequests] = useState([]); // 7A — owner only
 
-  // ⚠️ Socket handlers are registered ONCE, so any `phase` they close over is
-  // frozen at mount. `join-approved` can arrive long after the user gave up and
-  // went back to the lobby; without this mirror the handler would act on a stale
-  // 'lobby' and wrongly enter the room. Same always-fresh pattern as
-  // handlersRef in useMeetingSocket.
+  
   const phaseRef = useRef('lobby');
   useEffect(() => { phaseRef.current = phase; }, [phase]);
 
-  // 7B refresh recovery: a guest who reloads has lost `location.state` (route
-  // state does not survive a refresh by design) and has no session to rehydrate
-  // from. Send them back to the name form instead of stranding them on an empty
-  // lobby they cannot act on.
-  //
-  // ⚠️ Gate on `token`, NOT on `user`. `user` is null for a signed-in user whose
-  // stored profile was cleared or unparseable (AuthContext deliberately treats
-  // corrupted storage as logged out), and redirecting on that would bounce a
-  // legitimate member to the guest form. `token` is exactly the signal withAuth
-  // uses, so the two gates can never disagree — and the `!guestInfo` half
-  // prevents a navigate-in-effect loop for real guests.
+ 
   useEffect(() => {
     if (!token && !guestInfo) {
       navigate(`/join/${code}`, { replace: true });
@@ -81,10 +58,7 @@ export default function VideoMeet() {
   const [enrolledDescriptor, setEnrolledDescriptor] = useState(null); // gates 5E's loop
   const [liveAttendance, setLiveAttendance] = useState([]);  // owner-only (5F)
   const detectVideoRef = useRef(null);
-  // ⚠️ CORRECTION (C5): the hook needs to know WHEN the <video> actually mounted.
-  // A ref's identity doesn't change when .current is set, so the hook must depend
-  // on this boolean instead — otherwise it bails out on first run and the 10s
-  // verification loop never starts.
+  
   const [videoReady, setVideoReady] = useState(false);
 
   // ---- hooks (each owns ONE concern) ----
@@ -96,13 +70,7 @@ export default function VideoMeet() {
   // Emit signals through a ref so useWebRTC can be created before the socket.
   const emitSignalRef = useRef((to, data) => {});
 
-  // ⚠️ BUGFIX — emitSignal MUST have a stable identity.
-  // This used to be an inline arrow: `useWebRTC((to, data) => emitSignalRef.current(to, data))`.
-  // An inline arrow is a NEW function on every render, which cascaded:
-  //   emitSignal (new) → createPeer (new) → handleNewPeer/handleSignal (new)
-  //   → useWebRTC's useMemo recomputes → `webrtc` is a new OBJECT every render.
-  // `useCallback` with [] pins the identity, which keeps every callback inside
-  // useWebRTC stable and lets its memoised return actually stay memoised.
+  
   const emitSignal = useCallback((to, data) => emitSignalRef.current(to, data), []);
 
   const webrtc = useWebRTC(emitSignal);
@@ -110,19 +78,11 @@ export default function VideoMeet() {
   // collabRef breaks the socket↔collab wiring cycle (same trick as emitSignalRef)
   const collabRef = useRef(null);
 
-  // 7A/7C — `enterRoom` and `leaveToHome` are DEFINED LATER in this component
-  // but are needed by socket handlers that are registered NOW. Declaring them
-  // before the hook call is what breaks the circular dependency: the handlers
-  // capture the refs, and the refs get the real functions once those callbacks
-  // exist. Reading `enterRoom` directly here would throw on the first render
-  // (temporal dead zone) — the same reason `collab` uses collabRef.
+
   const enterRoomRef = useRef(null);
   const leaveToHomeRef = useRef(null);
 
-  // ⚠️ CORRECTION (C4): the callbacks go inside a REF. Passing them as direct
-  // props (`getCameraTrack: () => …`) created a new function identity every
-  // render, which destabilised every useCallback inside useScreenShare and made
-  // its unmount cleanup stop the share immediately (see the hook).
+
   const screenSharePropsRef = useRef(null);
   screenSharePropsRef.current = {
     getCameraTrack: () => mediaRef.current?.getVideoTracks()[0] || null,
@@ -317,14 +277,8 @@ export default function VideoMeet() {
     stopStream();                    // 1. stop capture — camera light off, tracks dead
     webrtc.closeAllPeers();          // 2. close every RTCPeerConnection
     socketRef.current?.disconnect(); // 3. kill signaling (server fires disconnect cleanup)
-    // 5K handoff: the summary is generated AFTER every socket is gone, so a
-    // broadcast would reach nobody. Home picks this up over REST instead.
-    //
-    // ⚠️ CORRECTION (C18): `pendingSummaryAt` is what lets Home tell a FRESH
-    // handoff from a stale one — and, more importantly, tells it that the server
-    // may still be WRITING the summary right now, so a single fetch would race
-    // it and 404. See the retry logic in home.jsx. Written together with the
-    // code so the two can never get out of step.
+  
+    
     sessionStorage.setItem('pendingSummary', code);
     sessionStorage.setItem('pendingSummaryAt', String(Date.now()));
     navigate('/home');               // 4. only now leave the page
@@ -341,17 +295,7 @@ export default function VideoMeet() {
 
   // Browser-back / tab-close safety net: close every peer on UNMOUNT ONLY.
   //
-  // ⚠️ BUGFIX — this used to be `useEffect(() => () => webrtc.closeAllPeers(), [webrtc])`.
-  // That is still wrong even with a stable emitSignal, because useWebRTC's
-  // return memo deliberately depends on `remoteStreams` (so the grid re-renders
-  // when a peer connects). Every time a remote stream arrives, `webrtc` becomes
-  // a NEW object → this effect's cleanup fires → closeAllPeers() → the peer that
-  // JUST connected is destroyed. Symptom: both users appear connected, but media
-  // never flows and remote tiles stay empty.
-  //
-  // Fix: hold the teardown fn in a ref and run it with EMPTY deps, so it fires
-  // exactly once — on unmount — and never on a state change. (closeAllPeers is
-  // itself stable: it only closes peers, it does not depend on the media state.)
+  
   const closeAllPeersRef = useRef(webrtc.closeAllPeers);
   closeAllPeersRef.current = webrtc.closeAllPeers;
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {Alert, Box, Button, CircularProgress, Paper, Tab, Tabs, TextField, Typography} from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Paper, Tab, Tabs, TextField, Typography } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;

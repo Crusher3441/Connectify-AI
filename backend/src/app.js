@@ -1,6 +1,6 @@
 import express from 'express';
 import http from 'node:http';
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv';
 import cors from 'cors';
 import { config } from './config.js';
 import routes from './routes/index.routes.js';
@@ -14,7 +14,7 @@ import { notFound, errorHandler } from './middleware/errorHandler.js';
 const app = express();
 const httpServer = http.createServer(app);
 
-dotenv.config();
+// dotenv.config();
 const corsOrigin = (origin, callback) => {
   if (!origin || config.allowedOrigins.includes(origin)) {
     return callback(null, true);
@@ -26,6 +26,10 @@ app.use(cors({ origin:corsOrigin }));
 app.use(express.json());
 // initSocket(server);
 
+app.get('/', (req, res) => {
+    res.send("Hello World");
+});
+
 app.get('/api/health',(req,res)=>{
     res.send("Healthy");
 })
@@ -34,9 +38,7 @@ app.use('/api',routes)
 app.use(notFound);
 app.use(errorHandler);
 
-app.get('/', (req, res) => {
-    res.send("Hello World");
-});
+
 
 
 
