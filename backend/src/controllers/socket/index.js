@@ -3,10 +3,11 @@ import { registerSignalingHandlers } from './signalingHandler.js';
 import { registerChatHandlers } from './chatHandler.js';
 import { registerReactionHandlers } from './reactionHandler.js';
 import { registerPollHandlers } from './pollHandler.js';
-import { registerAttendanceHandlers } from './attendanceHandler.js';
+import { registerAttendanceHandlers, startAttendanceTicker } from './attendanceHandler.js';
 import { registerTranscriptHandlers } from './transcriptHandler.js'
 
 export const registerSocketHandlers = (io) => {
+  startAttendanceTicker(io);
   io.on('connection', (socket) => {
     console.log('Socket connected:', socket.id);
 

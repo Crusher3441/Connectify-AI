@@ -8,8 +8,8 @@ const inRoom = (socket) => {
   return { code, room, me };
 };
 
-const broadcastPolls = (io, code) => io.to(code).emit('polls-updated', roomStore.getRoom(code).polls);
-const broadcastDecisions = (io, code) => io.to(code).emit('decisions-updated', roomStore.getRoom(code).decisions);
+const broadcastPolls = (io, code) => io.to(code).emit('polls-updated', roomStore.getRoom(code)?.polls || []);
+const broadcastDecisions = (io, code) => io.to(code).emit('decisions-updated', roomStore.getRoom(code)?.decisions || []);
 
 export const registerPollHandlers = (io, socket) => {
   socket.on('create-poll', ({ question, options } = {}, callback = () => {}) => {

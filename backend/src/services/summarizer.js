@@ -1,23 +1,7 @@
-// ⚠️ CORRECTION (H3): read the key through config.js, never process.env here.
 import { config } from '../config.js';
 import OpenAI from 'openai';
 
-// ⚠️ CORRECTION (H3) — THIS IS THE SUBTLE ONE.
-// The original built the client at MODULE SCOPE from process.env:
-//     const client = process.env.OPENAI_API_KEY ? new OpenAI({…}) : null;
-// Module scope runs during ESM *evaluation*. Phase 1D instructed you to add
-// `import { registerSocketHandlers } from './controllers/socket/index.js'` at the
-// TOP of app.js — and that import chain reaches meetingHandler → meetingFinalizer
-// → summarizer.js. ESM evaluates imports depth-first in SOURCE ORDER, so when
-// summarizer.js evaluated, `import 'dotenv/config'` inside config.js (listed
-// LOWER in app.js) had not executed yet. process.env.OPENAI_API_KEY was
-// therefore `undefined` on EVERY boot: client was permanently null, every call
-// fell through to the keyword engine, and the UI cheerfully displayed
-// "Keyword summary" while a perfectly valid key sat in .env.
-//
-// Two guarantees, both required:
-//   1. the value comes from config.js (which owns dotenv), and
-//   2. the client is built LAZILY, on first use, not at import time.
+
 let client = null;
 let clientBuilt = false;
 const getClient = () => {
@@ -114,8 +98,7 @@ const keywordSummarize = (rawText) => {
 
 // THE entry point — uniform shape regardless of engine:
 export const summarizeTranscript = async (rawText) => {
-  // ⚠️ CORRECTION (H3): getClient() — resolves the key at CALL time, long after
-  // dotenv has run. The old module-scope `client` was null on every boot.
+  
   const activeClient = getClient();
   if (activeClient && rawText && rawText.trim().length > 40) {
     try {

@@ -1,17 +1,10 @@
-// ⚠️ CORRECTION (H5 follow-up): useSearchParams needed for the ?code= deep link.
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { apiClient } from '../utils/apiClient';
 import PageHeader from '../components/PageHeader';
 import styles from '../styles/pages.module.css';
 
-// ⚠️ CORRECTION (M6): the original was
-//   const barClass = (pct) => (pct >= 70 ? '' : pct >= 40 ? 'warn' : 'bad');
-//   … className={`${styles.barFill} ${styles[barClass(p.percentage)]}`}
-// For the >=70 case barClass returns '' and styles[''] is `undefined`, so the
-// template literal interpolated the literal string "undefined" into the
-// className — a junk class on every healthy participant's bar.
-// A map of ALL THREE states keeps `styles[...]` defined for every branch.
+
 const BAR_CLASS = { good: '', warn: 'warn', bad: 'bad' };
 const barClass = (pct) => {
   const pctNum = Number(pct) || 0;           // guards a string-typed percentage
@@ -40,10 +33,7 @@ function AttendanceCard({ report, defaultOpen = false }) {
     }
   };
 
-  // ⚠️ CORRECTION (H5 follow-up): a card that STARTS open (deep-linked via
-  // ?code=) never runs `toggle`, so its detail was never fetched — it would
-  // render an expanded card stuck on "Loading summary…" forever. Fetch on mount
-  // when defaultOpen is set.
+
   useEffect(() => {
     if (!defaultOpen || detailState !== 'idle') return;
     setDetailState('loading');
@@ -51,10 +41,7 @@ function AttendanceCard({ report, defaultOpen = false }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultOpen, detailState, report.meetingCode]);
 
-  // ⚠️ CORRECTION (M6): the original had no catch — a rejected PATCH (403 for a
-  // participant who never enrolled, 401 from a rotated token, 500 from a DB
-  // blip) produced an unhandled promise rejection: the console filled with red
-  // and the chip silently reverted on the next render with no explanation.
+
   const [chipError, setChipError] = useState(null);
 
   const toggleStatus = async (item) => {
@@ -160,11 +147,7 @@ export default function AttendanceHistoryPage() {
   const [reports, setReports] = useState([]);
   const [error, setError] = useState(null);
 
-  // ⚠️ CORRECTION (H5 follow-up): the History page's "View report" button
-  // navigates here as /attendance?code=<meetingCode>. Nothing read that
-  // param, so clicking it landed on the generic list with the target meeting
-  // collapsed and buried — the "fix" pointed nowhere useful. Read it and
-  // auto-expand that card on arrival.
+
   const [searchParams] = useSearchParams();
   const focusCode = searchParams.get('code');
 

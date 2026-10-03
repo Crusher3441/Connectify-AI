@@ -1,110 +1,103 @@
-.hero {
+.lobby {
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
-}
-
-.navbar {
-  display: flex;
-  padding: 20px 40px;
-}
-
-.logo {
-  font-weight: 700;
-  font-size: 1.25rem;
-}
-
-.logoAccent,
-.accent {
-  color: var(--color-primary);
-}
-
-.content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
-  padding: 0 24px;
+  padding: 24px;
+}
+
+.card {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  padding: 28px;
+}
+
+.code {
+  color: var(--color-text-muted);
   text-align: center;
 }
 
-.content h1 {
-  font-size: clamp(2rem, 5vw, 3.4rem);
-}
-
-.tagline {
-  color: var(--color-text-muted);
-  font-size: 1.15rem;
-  max-width: 520px;
-}
-
-.actions {
+.preview {
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: var(--radius-md);
+  overflow: hidden;
   display: flex;
-  gap: 14px;
-  margin-top: 10px;
+  align-items: center;
+  justify-content: center;
 }
 
-.primaryBtn {
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholder {
+  color: var(--color-text-muted);
+}
+
+.error {
+  color: var(--color-danger);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.input {
+  background: var(--color-bg);
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  padding: 12px 16px;
+  font-size: 1rem;
+  outline: none;
+}
+.input:focus {
+  border-color: var(--color-primary);
+}
+
+.joinBtn {
   background: var(--color-primary);
   color: #fff;
   border: none;
   border-radius: var(--radius-md);
-  padding: 13px 28px;
+  padding: 13px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
 }
-.primaryBtn:hover {
+.joinBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.joinBtn:hover:not(:disabled) {
   background: var(--color-primary-hover);
 }
 
-.ghostBtn {
-  background: transparent;
-  color: var(--color-text);
-  border: 1px solid var(--color-text-muted);
-  border-radius: var(--radius-md);
-  padding: 13px 28px;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.statusCard {
+/* 7A — the "waiting for the host" state. Shown instead of the Join button
+   once the server has accepted the request but not yet admitted the user. */
+.waiting {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  margin-top: 28px;
-  padding: 12px 22px;
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-1);
+  gap: 12px;
   color: var(--color-text-muted);
 }
 
-.statusDot {
-  width: 10px;
-  height: 10px;
+.spinner {
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: var(--color-text-muted);
-}
-.up {
-  color: var(--color-success);
-}
-.up .statusDot {
-  background: var(--color-success);
-}
-.down {
-  color: var(--color-danger);
-}
-.down .statusDot {
-  background: var(--color-danger);
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--color-primary);
+  animation: spin 0.9s linear infinite;
 }
 
-
-/* Keyboard focus visibility (Part 2M) */
-.primaryBtn:focus-visible,
-.ghostBtn:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
