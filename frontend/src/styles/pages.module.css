@@ -1,0 +1,186 @@
+.page {
+  min-height: 100vh;
+  padding: 32px clamp(16px, 6vw, 64px);
+}
+
+.title {
+  font-size: 1.6rem;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  color: var(--color-text-muted);
+  margin-bottom: 24px;
+}
+
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  padding: 18px 20px;
+  margin-bottom: 12px;
+}
+
+.cardRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.grow { flex: 1; min-width: 160px; }
+
+.code {
+  font-family: monospace;
+  background: var(--color-bg);
+  padding: 3px 10px;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+}
+
+.meta { color: var(--color-text-muted); font-size: 0.88rem; }
+
+.smallBtn {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+.smallBtn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+.errorBox {
+  color: var(--color-danger);
+  background: rgba(231, 76, 60, 0.08);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.skeleton {
+  height: 76px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(90deg, var(--color-surface) 25%, rgba(255,255,255,0.06) 50%, var(--color-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  margin-bottom: 12px;
+}
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* ---- attendance viewer (6C) ---- */
+.bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  flex: 1;
+  min-width: 120px;
+}
+.barFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-success);
+  transition: width 0.4s ease;
+}
+.barFill.warn { background: #f39c12; }
+.barFill.bad { background: var(--color-danger); }
+
+.expandable {
+  cursor: pointer;
+}
+.chevron {
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.detail {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.partRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.92rem;
+}
+
+/* ⚠️ CORRECTION (M6): added — AttendanceCard referenced styles.panelTitle,
+   which only exists in sidebar.module.css. This is the pages.module.css
+   equivalent so the label actually renders styled. */
+.sectionLabel {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin: 0 0 10px;
+}
+.partName { width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.partMeta { color: var(--color-text-muted); font-size: 0.78rem; width: 110px; }
+
+.summaryText {
+  color: var(--color-text);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.actionItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.92rem;
+}
+.statusChip {
+  border: none;
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  background: rgba(255,255,255,0.1);
+  color: var(--color-text);
+}
+.statusChip.open { color: #f39c12; }
+.statusChip.done { color: var(--color-success); }
+.statusChip.dropped { color: var(--color-text-muted); text-decoration: line-through; }
+
+/* ---- analytics (6D) ---- */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.statCard {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow-1);
+}
+.statValue { font-size: 2rem; font-weight: 700; }
+.statLabel { color: var(--color-text-muted); font-size: 0.85rem; margin-top: 4px; }
+
+.chartCard {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.chartCard h3 { margin-bottom: 16px; font-size: 1.05rem; }
