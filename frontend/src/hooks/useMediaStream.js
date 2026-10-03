@@ -14,16 +14,30 @@ const describeError = (err) => {
 };
 
 export const useMediaStream = () => {
-  const streamRef = useRef(null);           
+  const streamRef = useRef(null);           // the truth lives HERE
   const [localStream, setLocalStream] = useState(null); // state mirrors it for rendering
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [error, setError] = useState(null);
 
-  // safe under StrictMode double-mount and repeated calls.
+  // Idempotent: safe under StrictMode double-mount and repeated calls.
   // Starting media twice on the same device throws NotReadableError.
   const startStream = useCallback(async () => {
     if (streamRef.current) return streamRef.current;
+
+    // Camera/mic are only exposed in a SECURE CONTEXT: https:// or
+    // http://localhost. Opening the app via the LAN IP (http://10.x.x.x:3000)
+    // leaves navigator.mediaDevices undefined, so the browser never prompts and
+    // the raw TypeError below is unreadable. Say the useful thing instead.
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError(
+        window.isSecureContext
+          ? 'This browser is not exposing camera/microphone access here.'
+          : 'Camera & mic need a secure context — open the app at http://localhost:3000 (the LAN IP or plain http will not work).'
+      );
+      return null;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -73,5 +87,7 @@ export const useMediaStream = () => {
   return {
     localStream, micOn, camOn, error,
     startStream, toggleMic, toggleCam, stopStream,
+    // screen share needs the live stream object, not just the state copy.
+    streamRef,
   };
 };

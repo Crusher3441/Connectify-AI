@@ -1,5 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+// ⚠️ CORRECTION (C3): useMemo is required — see the return statement at the
+// bottom of this hook for why the returned object must have a stable identity.
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+// Google's public STUN servers. On localhost/LAN you barely need them,
+// but across networks they tell each peer its own public address.
 const ICE_CONFIG = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
@@ -8,7 +12,7 @@ const ICE_CONFIG = {
 };
 
 export const useWebRTC = (emitSignal) => {
-  // ALL mutable plumbing lives in refs coz react doesnot re-render if value of useRef changes
+  // ALL mutable plumbing lives in refs (audit #8: no module-level state).
   const peersRef = useRef({});        // remoteSocketId → RTCPeerConnection
   const pendingIceRef = useRef({});   // remoteSocketId → [candidate, …]
   const negotiatingRef = useRef({});  // remoteSocketId → boolean
@@ -17,7 +21,7 @@ export const useWebRTC = (emitSignal) => {
 
   const [remoteStreams, setRemoteStreams] = useState({}); // id → MediaStream
 
-  
+  // ---- state setters used by VideoMeet ----
   const setMySocketId = useCallback((id) => { mySocketIdRef.current = id; }, []);
 
   const setLocalStream = useCallback((stream) => {
@@ -39,23 +43,23 @@ export const useWebRTC = (emitSignal) => {
 
   const closeAllPeers = useCallback(() => {
     Object.keys(peersRef.current).forEach(removePeer);
-  }, [removePeer]);  // ye function bhi kbhi recreate nhi hoga coz removePeer ki dependency array empty hai ( aur agr removePeer ka refrence nhi change hoga to iska bhi nhi hoga)
+  }, [removePeer]);
 
-
-  const createPeer = useCallback(                      // createPeer("user123") will lead to create connection with user123
-    (remoteId) => {                                              
+  // ---- PART A: the factory ----
+  const createPeer = useCallback(
+    (remoteId) => {
       const pc = new RTCPeerConnection(ICE_CONFIG);
 
       // Attach ALL local tracks now. The second `stream` argument records
       // stream membership on the sender — Phase 4's screen share finds its
       // video sender via `pc.getSenders().find(s => s.track?.kind === 'video')`,
-      // which only works because we passed the stream here.
+      // which only works because we passed the stream here. Do not omit it.
       const stream = localStreamRef.current;
-      if (stream) stream.getTracks().forEach((track) => pc.addTrack(track, stream));      // Is WebRTC connection ke through mera camera aur microphone remote user ko bhejo
+      if (stream) stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
       // My addresses → relay to the remote side
       pc.onicecandidate = (e) => {
-        if (e.candidate) emitSignal(remoteId, { type: 'candidate', candidate: e.candidate });         // ice candidate signaling server ke through remote side ko bhej rahe hai
+        if (e.candidate) emitSignal(remoteId, { type: 'candidate', candidate: e.candidate });
       };
 
       // Their media arrives → store in STATE (UI must re-render)
@@ -63,8 +67,9 @@ export const useWebRTC = (emitSignal) => {
         setRemoteStreams((prev) => ({ ...prev, [remoteId]: e.streams[0] }));
       };
 
-      pc.onconnectionstatechange = () => console.log(`[rtc] peer ${remoteId.slice(0, 5)} → ${pc.connectionState}`);
-        
+      // Free debugging visibility during this phase
+      pc.onconnectionstatechange = () =>
+        console.log(`[rtc] peer ${remoteId.slice(0, 5)} → ${pc.connectionState}`);
 
       peersRef.current[remoteId] = pc;
       return pc;
@@ -72,11 +77,25 @@ export const useWebRTC = (emitSignal) => {
     [emitSignal]
   );
 
+  // ---- PART B: negotiation ----
 
-   // Called when we LEARN about a peer: from the join ack (existing members)
+  // Buffered ICE candidates can only be applied AFTER a remote description
+  // exists. When the answer/offer arrives, flush the queue in order.
+  const flushIce = useCallback((remoteId) => {
+    const pc = peersRef.current[remoteId];
+    const queue = pendingIceRef.current[remoteId] || [];
+    while (queue.length && pc) {
+      pc.addIceCandidate(queue.shift()).catch((err) =>
+        console.warn('[rtc] flushed candidate failed:', err)
+      );
+    }
+  }, []);
+
+
+  // Called when we LEARN about a peer: from the join ack (existing members)
   // or from a 'user-joined' broadcast (newcomers).
   const handleNewPeer = useCallback(async (remoteId) => {
-    if (peersRef.current[remoteId]) return;          // already connected 
+    if (peersRef.current[remoteId]) return;          // already connected — idempotent
     if (remoteId === mySocketIdRef.current) return;  // never dial yourself
 
     createPeer(remoteId);
@@ -98,21 +117,9 @@ export const useWebRTC = (emitSignal) => {
     negotiatingRef.current[remoteId] = false;
   }, [createPeer, emitSignal]);
 
-  // Buffered ICE candidates can only be applied AFTER a remote description
-  // exists. When the answer/offer arrives, flush the queue in order.
-  const flushIce = useCallback((remoteId) => {
-    const pc = peersRef.current[remoteId];
-    const queue = pendingIceRef.current[remoteId] || [];
-    while (queue.length && pc) {
-      pc.addIceCandidate(queue.shift()).catch((err) =>
-        console.warn('[rtc] flushed candidate failed:', err)
-      );
-    }
-  }, []);
-
   const handleSignal = useCallback(
     async ({ from, data }) => {
-      // Late arrival case: an offer arrives for a peer we haven't created yet
+      // Late/racy case: an offer arrives for a peer we haven't created yet
       // (their 'user-joined' handling hasn't run). Create the peer on demand.
       let pc = peersRef.current[from];
       if (!pc && data?.type === 'offer') pc = createPeer(from);
@@ -145,15 +152,27 @@ export const useWebRTC = (emitSignal) => {
 
   useEffect(() => closeAllPeers, [closeAllPeers]); // unmount safety
 
-  return {
-    peersRef,
-    remoteStreams,
-    setMySocketId,
-    setLocalStream,
-    createPeer,
-    handleNewPeer,
-    removePeer,
-    handleSignal,
-    closeAllPeers,
-  };
+  return useMemo(
+    () => ({
+      peersRef,
+      remoteStreams,
+      setMySocketId,
+      setLocalStream,
+      createPeer,
+      handleNewPeer,
+      removePeer,
+      handleSignal,
+      closeAllPeers,
+    }),
+    [
+      remoteStreams, // changes when a peer connects — consumers must re-render
+      setMySocketId,
+      setLocalStream,
+      createPeer,
+      handleNewPeer,
+      removePeer,
+      handleSignal,
+      closeAllPeers,
+    ]
+  );
 };

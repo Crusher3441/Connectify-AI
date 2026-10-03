@@ -121,9 +121,9 @@ export default function VideoMeet() {
   // its unmount cleanup stop the share immediately (see the hook).
   const screenSharePropsRef = useRef(null);
   screenSharePropsRef.current = {
-    getCameraTrack: () => mediaRef.current?.getVideoTracks()[0] || null,
-    onShareStarted: () => socketRef.current?.emit('screen-share-started'),
-    onShareStopped: () => socketRef.current?.emit('screen-share-stopped'),
+    getCameraTrack: () => mediaRef?.current?.getVideoTracks?.()[0] || null,
+    onShareStarted: () => socketRef?.current?.emit('screen-share-started'),
+    onShareStopped: () => socketRef?.current?.emit('screen-share-stopped'),
   };
   const screenShare = useScreenShare({
     peersRef: webrtc.peersRef,
