@@ -38,6 +38,11 @@ export default function VideoMeet() {
   const [joinError, setJoinError] = useState(null);
   const [activeTab, setActiveTab] = useState("chat"); // sidebar tab (4A)
   const [mySocketId, setMySocketId] = useState(null);
+  const [joinRequests, setJoinRequests] = useState([]);
+  
+
+  const phaseRef = useRef('lobby');
+  useEffect(() => { phaseRef.current = phase; }, [phase]);
 
   useEffect(() => {
     if (!token && !guestInfo) {
@@ -77,6 +82,9 @@ export default function VideoMeet() {
 
   // collabRef breaks the socket↔collab wiring cycle (same trick as emitSignalRef)
   const collabRef = useRef(null);
+  const enterRoomRef = useRef(null);
+  const leaveToHomeRef = useRef(null);
+
 
   const screenSharePropsRef = useRef(null);
   screenSharePropsRef.current = {
@@ -110,6 +118,41 @@ export default function VideoMeet() {
     onShareStopped: () => collabRef.current?.handleShareStopped(),
     onTranscript: (p) => collabRef.current?.handleIncomingTranscript(p),
     onLiveAttendance: (p) => setLiveAttendance(p),
+
+    onJoinRequest: (p) => setJoinRequests((prev) =>
+      // De-dupe: the same socket can only be pending once, but a re-render or a
+      // retried request must not stack duplicate cards.
+      prev.some((x) => x.socketId === p.socketId) ? prev : [...prev, p]
+    ),
+    onJoinApproved: (res) => {
+      // Stale-approval guard. The user may have hit Back, or the room may have
+      // dissolved, between requesting and being approved. phaseRef is read
+      // (not `phase`) because this handler was registered once at mount.
+      if (phaseRef.current !== 'awaiting') return;
+      enterRoomRef.current?.(res);
+    },
+    onJoinRejected: (p) => {
+      setPhase('lobby');
+      setJoinError(p.message);
+    },
+    onDissolved: () => {
+      // Two audiences: in-room members are sent home with the summary handoff;
+      // someone still on the spinner just gets released back to the lobby.
+      if (phaseRef.current === 'room') leaveToHomeRef.current?.();
+      else {
+        setPhase('lobby');
+        setJoinError('The host left before admitting you.');
+      }
+    },
+    onMeetingEnded: () => {
+      //  identical teardown to leaving voluntarily. The server has already
+      // finalized, so `pendingSummary` is what carries the result to Home.
+      if (phaseRef.current === 'room') leaveToHomeRef.current?.();
+      else {
+        setPhase('lobby');
+        setJoinError('The meeting was ended by the host.');
+      }
+    },
   });
 
   const collab = useMeetingCollab({ socketRef, activeTab });
@@ -168,45 +211,23 @@ export default function VideoMeet() {
   const handleJoin = useCallback(async () => {
     const stream = await startStream();
     if (!stream) return; // mediaError already set by the hook
-    // Push the stream into useWebRTC synchronously, BEFORE any peer is created.
-    // createPeer() attaches tracks by reading localStreamRef.current; if the
-    // syncing effect ([localStream, webrtc]) has not flushed yet, that ref is
-    // still null and the peer would be created with ZERO tracks — which shows
-    // up exactly as "connected but no video and no audio".
+   
     webrtc.setLocalStream(stream);
+    setJoinError(null);
     try {
-      const res = await joinCall(code, username.trim(), user?.username || null);
-
-      const myId = socketRef.current?.id;
-      if (myId) webrtc.setMySocketId(myId);
-      setMySocketId(myId);
-      // Dial everyone already in the room (the deterministic rule in 3G
-      // decides who actually offers — both sides run it).
-      for (const p of res.participants) {
-        if (myId && p.socketId !== myId) webrtc.handleNewPeer(p.socketId);
+     
+      const res = await joinCall(code, username.trim(), isGuest, user?.username || null);
+      // 7A — the server's THIRD ack shape. `pending` is a success, not a
+      // failure: the request is queued and the host has been notified.
+      if (res.pending) {
+        setPhase('awaiting');
+        return;
       }
-      collab.seedFromJoin(res); // 4B/4F/5H — history for all full-state channels
-      collab.handleRoster(res.participants); // 4C — initial roster from ack
-      setPhase("room");
-      setEnrollmentOpen(true); // 5B — offer enrollment once per meeting
-      // ⚠️ CORRECTION (H1): the FIRST valid media-state announcement. Without
-      // this the roster has no micOn/camOn keys until the first toggle.
-      socketRef.current?.emit("media-state", { micOn, camOn });
+      enterRoom(res);
     } catch (err) {
       setJoinError(err.message);
     }
-  }, [
-    code,
-    username,
-    user,
-    startStream,
-    joinCall,
-    socketRef,
-    webrtc,
-    collab,
-    micOn,
-    camOn,
-  ]);
+  }, [code, username, isGuest, user, startStream, joinCall, enterRoom, webrtc]);
 
   // ---- 5C: enrollment contract (modal captures, parent owns the socket) ----
   // const handleEnrollConfirm = useCallback(async (descriptor) => {
