@@ -23,11 +23,11 @@ export const useMeetingSocket = (handlers) => {
       ['connect', () => { setConnected(true); setError(null); }],
       ['disconnect', () => setConnected(false)],
       ['connect_error', (err) => setError(err.message)],
-      // Phase 3 — mesh lifecycle + signaling (unchanged)
+      // Phase 3 — mesh lifecycle + signaling 
       ['user-joined', (p) => handlersRef.current.onUserJoined?.(p)],
       ['participant-left', (p) => handlersRef.current.onParticipantLeft?.(p)],
       ['signal', (p) => handlersRef.current.onSignal?.(p)],
-      // Phase 4 — collaboration (handlers fill in through 4G)
+      // Phase 4 — collaboration 
       ['chat-received', (p) => handlersRef.current.onChatReceived?.(p)],
       ['participant-list', (p) => handlersRef.current.onRoster?.(p)],
       ['reaction-received', (p) => handlersRef.current.onReaction?.(p)],

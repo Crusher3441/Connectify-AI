@@ -34,7 +34,7 @@ export const useFaceAttendance = ({
       tickRunningRef.current = true;
       try {
         const video = videoRef.current;
-
+        // temporary
         console.log("[attendance]", {
           enrolled: !!enrolledDescriptor,
           video: !!video,
@@ -47,7 +47,7 @@ export const useFaceAttendance = ({
         const frame = video
           ? await captureFrame(video, streamRef?.current)
           : null;
-        if (frame && frame.luma >= 0 && frame.luma >= 8) {
+        if (frame && frame.luma >= 8) {
           const canvas = frame.canvas;
 
           const detection = await faceapi

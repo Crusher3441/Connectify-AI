@@ -14,13 +14,13 @@ const describeError = (err) => {
 };
 
 export const useMediaStream = () => {
-  const streamRef = useRef(null);           // the truth lives HERE
+  const streamRef = useRef(null);           
   const [localStream, setLocalStream] = useState(null); // state mirrors it for rendering
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [error, setError] = useState(null);
 
-  // Idempotent: safe under StrictMode double-mount and repeated calls.
+  // safe under StrictMode double-mount and repeated calls.
   // Starting media twice on the same device throws NotReadableError.
   const startStream = useCallback(async () => {
     if (streamRef.current) return streamRef.current;

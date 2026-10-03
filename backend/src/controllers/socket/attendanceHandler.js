@@ -37,7 +37,7 @@ export const registerAttendanceHandlers = (io, socket) => {
       return callback({ ok: false, message: "Invalid face descriptor" });
     }
 
-    // ⚠️ CORRECTION (H7): key on `me.identity`, NOT `me.username`.
+    //  CORRECTION (H7): key on `me.identity`, NOT `me.username`.
     // `me.username` is the lobby DISPLAY name ("Alice Smith"); Phase 6
     // authorizes with `req.user.username` ("alice"). Keying on the display name
     // writes a Face document nothing will ever match — enrollment appears to
@@ -66,7 +66,7 @@ export const registerAttendanceHandlers = (io, socket) => {
     // forging `verified-update` would otherwise add phantom rows to the tally.
     if (me.isGuest) return;
     // Server counts. The client never sends totals — it CAN'T lie about them.
-    // ⚠️ CORRECTION (H7): tally on `me.identity`, not the display name — this
+    //  CORRECTION (H7): tally on `me.identity`, not the display name — this
     // key becomes `participants[].username` in the Attendance doc, which Phase 6
     // matches against `req.user.username`. The rest of that note follows.
     roomStore.tallyAttendance(code, me.identity, verified);

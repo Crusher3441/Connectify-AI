@@ -10,6 +10,6 @@ const faceSchema = new mongoose.Schema(
 );
 
 // One enrollment per person per meeting — re-enrollment REPLACES, never duplicates.
-faceSchema.index({ username: 1, meetingCode: 1 }, { unique: true });
+faceSchema.index({ username: 1, meetingCode: 1 }, { unique: true });    // 1 means ascending index
 
 export default mongoose.model('Face', faceSchema);

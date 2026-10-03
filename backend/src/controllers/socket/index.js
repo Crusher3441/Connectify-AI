@@ -4,7 +4,7 @@ import { registerChatHandlers } from './chatHandler.js';
 import { registerReactionHandlers } from './reactionHandler.js';
 import { registerPollHandlers } from './pollHandler.js';
 import { registerAttendanceHandlers } from './attendanceHandler.js';
-// import { registerTranscriptHandlers } from './'
+import { registerTranscriptHandlers } from './transcriptHandler.js'
 
 export const registerSocketHandlers = (io) => {
   io.on('connection', (socket) => {
@@ -16,7 +16,7 @@ export const registerSocketHandlers = (io) => {
     registerReactionHandlers(io, socket);
     registerPollHandlers(io, socket);
     registerAttendanceHandlers(io, socket);
-    // registerTranscriptHandlers(io, socket);
+    registerTranscriptHandlers(io, socket);
 
     socket.on('disconnect', (reason) => {
       console.log('Socket disconnected:', socket.id, `(${reason})`);
