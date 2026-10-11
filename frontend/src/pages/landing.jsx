@@ -23,7 +23,7 @@ export default function LandingPage() {
     <main className={styles.hero}>
       <header className={styles.navbar}>
         <span className={styles.logo}>
-          MeetSync <span className={styles.logoAccent}>AI</span>
+          Connectify <span className={styles.logoAccent}>AI</span>
         </span>
         {user && (
           <button className={styles.ghostBtn} onClick={() => navigate('/home')}>

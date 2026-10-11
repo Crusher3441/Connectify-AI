@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState ,useMemo} from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext'; // Phase 2
 import { useMeetingSocket } from '../hooks/useMeetingSocket';
@@ -28,30 +28,35 @@ export default function VideoMeet() {
   const location = useLocation();
   const { user, token } = useAuth();
 
-  // 7B — identity is EITHER a signed-in user OR a route-state guest.
-  // `guestInfo` is null unless /join/:code handed us a name; the guard below
-  // guarantees we never reach the room with neither.
-  const guestInfo = location.state?.guest ? { name: location.state.name } : null;
-  const isGuest = !!guestInfo;
+  const guestInfo = useMemo(() => {
+  return location.state?.guest
+    ? { name: location.state.name }
+    : null;
+}, [location.state?.guest, location.state?.name]);
+
+const isGuest = !!guestInfo;
+
+  // const guestInfo = location.state?.guest ? { name: location.state.name } : null;
+  // const isGuest = !!guestInfo;
 
   
   const [phase, setPhase] = useState('lobby');  // 'lobby' | 'awaiting' | 'room'
   const [username, setUsername] = useState(guestInfo?.name || user?.name || '');
   const [joinError, setJoinError] = useState(null);
-  const [activeTab, setActiveTab] = useState('chat'); // sidebar tab (4A)
+  const [activeTab, setActiveTab] = useState('chat'); // sidebar tab
   const [mySocketId, setMySocketId] = useState(null);
-  const [joinRequests, setJoinRequests] = useState([]); // 7A — owner only
+  const [joinRequests, setJoinRequests] = useState([]); 
 
   
   const phaseRef = useRef('lobby');
   useEffect(() => { phaseRef.current = phase; }, [phase]);
 
  
-  useEffect(() => {
-    if (!token && !guestInfo) {
-      navigate(`/join/${code}`, { replace: true });
-    }
-  }, [token, guestInfo, code, navigate]);
+  // useEffect(() => {
+  //   if (!token && !guestInfo) {
+  //     navigate(`/join/${code}`, { replace: true });
+  //   }
+  // }, [token, guestInfo, code, navigate]);
 
   // ---- Phase 5 state ----
   const [enrollmentOpen, setEnrollmentOpen] = useState(false); // 5B — once per meeting

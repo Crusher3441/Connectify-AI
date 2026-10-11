@@ -22,7 +22,7 @@ apiClient.interceptors.response.use((res) => res,(err) => {               // Bac
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       
-      // Tell AuthContext to drop its in-memory copy too (see 2H).
+      // Tell AuthContext to drop its in-memory copy too.
       window.dispatchEvent(new Event('auth:session-expired'));
       if (window.location.pathname !== '/auth') {
         window.location.href = '/auth'; // outside React — full navigation is correct here

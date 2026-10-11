@@ -65,7 +65,7 @@ export default function AuthenticationPage() {
     }}>
       <Paper elevation={6} sx={{ width: '100%', maxWidth: 400, p: 3, bgcolor: 'var(--color-surface)' }}>
         <Typography variant="h5" sx={{ mb: 2, fontWeight: 700 }}>
-          MeetSync <Box component="span" sx={{ color: 'var(--color-primary)' }}>AI</Box>
+          Connectify <Box component="span" sx={{ color: 'var(--color-primary)' }}>AI</Box>
         </Typography>
 
         <Tabs value={mode} onChange={(_, v) => { setMode(v); setError(null); setNotice(null); }}>
