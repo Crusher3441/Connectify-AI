@@ -26,7 +26,7 @@ export default function VideoMeet() {
   const { code } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, token } = useAuth();
+  const { user } = useAuth();
 
   const guestInfo = useMemo(() => {
   return location.state?.guest
