@@ -63,7 +63,7 @@ export default function AuthenticationPage() {
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
       bgcolor: 'var(--color-bg)', p: 2,
     }}>
-      <Paper elevation={6} sx={{ width: '100%', maxWidth: 400, p: 3, bgcolor: 'var(--color-surface)' }}>
+      <Paper elevation={6} sx={{ width: '100%', maxWidth: 400, p: 3, bgcolor: 'white' }}>
         <Typography variant="h5" sx={{ mb: 2, fontWeight: 700 }}>
           Connectify <Box component="span" sx={{ color: 'var(--color-primary)' }}>AI</Box>
         </Typography>
