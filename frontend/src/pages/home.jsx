@@ -107,7 +107,7 @@ export default function HomePage() {
   return (
     <main className={styles.page}>
       <header className={styles.topbar}>
-        <span className={styles.logo}>MeetSync <span className={styles.accent}>AI</span></span>
+        <span className={styles.logo}>Connectify <span className={styles.accent}>AI</span></span>
         <button className={styles.ghostBtn} onClick={signOut}>Log out</button>
       </header>
 
